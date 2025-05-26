@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Dynamic Docs - Demo Fase 2</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f6fa;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .demo-section h3 {
+            margin-top: 0;
+            color: #3498db;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        
+        .module-container {
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 200px;
+            background-color: #fafafa;
+        }
+        
+        .module-container.has-module {
+            border-style: solid;
+            border-color: #3498db;
+            background-color: white;
+        }
+        
+        .log-container {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background-color: #27ae60;
+        }
+        
+        .status-error {
+            background-color: #e74c3c;
+        }
+        
+        .status-warning {
+            background-color: #f39c12;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 MVP Dynamic Docs - Demo Fase 2</h1>
+            <p>Test completo del sistema: Storage, Entity, Reactive e Module System</p>
+            <div id="system-status">
+                <span class="status-indicator status-warning"></span>
+                Sistema in inizializzazione...
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🧪 Test Automatici</h3>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="runAllTests()">Esegui Tutti i Test</button>
+                <button class="btn btn-success" onclick="runStorageTests()">Test Storage</button>
+                <button class="btn btn-success" onclick="runEntityTests()">Test Entity</button>
+                <button class="btn btn-success" onclick="runReactiveTests()">Test Reactive</button>
+                <button class="btn btn-success" onclick="runModuleTests()">Test Module</button>
+            </div>
+            <div id="test-log" class="log-container">
+                Clicca su un pulsante per eseguire i test...
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="demo-section">
+                <h3>👤 Demo Contact Card</h3>
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="loadContactCard()">Carica Contact Card</button>
+                    <button class="btn btn-warning" onclick="createTestClient()">Crea Cliente Test</button>
+                </div>
+                <div id="contact-card-container" class="module-container">
+                    <p style="text-align: center; color: #7f8c8d;">
+                        Clicca "Carica Contact Card" per vedere il modulo in azione
+                    </p>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3>📊 Stato Sistema</h3>
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="updateSystemStats()">Aggiorna Statistiche</button>
+                    <button class="btn btn-warning" onclick="clearAllData()">Pulisci Dati</button>
+                </div>
+                <div id="system-stats" class="log-container">
+                    Caricamento statistiche...
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🔄 Test Reattività</h3>
+            <p>Modifica i dati nel Contact Card e osserva gli aggiornamenti in tempo reale:</p>
+            <div class="grid">
+                <div>
+                    <h4>Modulo 1 (Principale)</h4>
+                    <div id="reactive-module-1" class="module-container">
+                        <p style="text-align: center; color: #7f8c8d;">
+                            Carica prima il Contact Card
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <h4>Modulo 2 (Mirror)</h4>
+                    <div id="reactive-module-2" class="module-container">
+                        <p style="text-align: center; color: #7f8c8d;">
+                            Carica prima il Contact Card
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import dei moduli core come script normali -->
+    <script src="./core/storage/StorageManager.js"></script>
+    <script src="./core/storage/MigrationInterface.js"></script>
+    <script src="./core/entity/Attribute.js"></script>
+    <script src="./core/entity/Entity.js"></script>
+    <script src="./core/entity/AttributeSpace.js"></script>
+    <script src="./core/reactive/EventBus.js"></script>
+    <script src="./core/module/ModuleDefinition.js"></script>
+    <script src="./core/module/ModuleCompiler.js"></script>
+    <script src="./scripts/test-phase2.js"></script>
+
+    <script>
+        // Inizializza sistema dopo che tutti i moduli sono caricati
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Inizializza sistema
+                window.storageManager = new StorageManager();
+                window.attributeSpace = new AttributeSpace();
+                window.eventBus = new EventBus();
+                window.moduleCompiler = new ModuleCompiler();
+
+                // Aggiorna stato sistema
+                document.getElementById('system-status').innerHTML = 
+                    '<span class="status-indicator status-success"></span>Sistema inizializzato e pronto!';
+
+                console.log('🎉 Sistema MVP Dynamic Docs inizializzato!');
+                
+                // Aggiorna statistiche iniziali
+                setTimeout(updateSystemStats, 500);
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione:', error);
+                document.getElementById('system-status').innerHTML = 
+                    '<span class="status-indicator status-error"></span>Errore inizializzazione: ' + error.message;
+            }
+        });
+    </script>
+
+    <script>
+        // Funzioni demo
+        let testClient = null;
+        let contactCardModule = null;
+
+        async function runAllTests() {
+            const logElement = document.getElementById('test-log');
+            logElement.textContent = 'Esecuzione test in corso...\n';
+            
+            try {
+                const tester = new window.Phase2Tester();
+                
+                // Intercetta console.log per mostrare nel log
+                const originalLog = console.log;
+                console.log = function(...args) {
+                    const message = args.join(' ');
+                    logElement.textContent += message + '\n';
+                    logElement.scrollTop = logElement.scrollHeight;
+                    originalLog.apply(console, args);
+                };
+
+                // Esegui test con piccoli delay per evitare interferenze
+                console.log('🧪 Avvio test suite completa Fase 2...\n');
+                
+                tester.results = { passed: 0, failed: 0, tests: [] };
+                
+                await tester.testStorageLayer();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                await tester.testEntitySystem();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                await tester.testReactiveSystem();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                await tester.testModuleSystem();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                await tester.testIntegration();
+                
+                tester.printResults();
+                
+                // Ripristina console.log
+                console.log = originalLog;
+                
+            } catch (error) {
+                console.log = console.log.originalLog || console.log;
+                logElement.textContent += `\n❌ Errore generale: ${error.message}\n`;
+                console.error('Errore test:', error);
+            }
+        }
+
+        async function runStorageTests() {
+            const logElement = document.getElementById('test-log');
+            logElement.textContent = 'Test Storage Layer...\n';
+            
+            try {
+                const tester = new window.Phase2Tester();
+                await tester.testStorageLayer();
+                logElement.textContent += '✅ Storage Layer test completati!\n';
+            } catch (error) {
+                logElement.textContent += `❌ Errore Storage: ${error.message}\n`;
+            }
+        }
+
+        async function runEntityTests() {
+            const logElement = document.getElementById('test-log');
+            logElement.textContent = 'Test Entity System...\n';
+            
+            try {
+                const tester = new window.Phase2Tester();
+                await tester.testEntitySystem();
+                logElement.textContent += '✅ Entity System test completati!\n';
+            } catch (error) {
+                logElement.textContent += `❌ Errore Entity: ${error.message}\n`;
+            }
+        }
+
+        async function runReactiveTests() {
+            const logElement = document.getElementById('test-log');
+            logElement.textContent = 'Test Sistema Reattivo...\n';
+            
+            try {
+                const tester = new window.Phase2Tester();
+                await tester.testReactiveSystem();
+                logElement.textContent += '✅ Sistema Reattivo test completati!\n';
+            } catch (error) {
+                logElement.textContent += `❌ Errore Reactive: ${error.message}\n`;
+            }
+        }
+
+        async function runModuleTests() {
+            const logElement = document.getElementById('test-log');
+            logElement.textContent = 'Test Module System...\n';
+            
+            try {
+                const tester = new window.Phase2Tester();
+                await tester.testModuleSystem();
+                logElement.textContent += '✅ Module System test completati!\n';
+            } catch (error) {
+                logElement.textContent += `❌ Errore Module: ${error.message}\n`;
+            }
+        }
+
+        async function createTestClient() {
+            try {
+                testClient = new window.Entity('Cliente');
+                testClient.setAttribute('nome', 'Mario Rossi');
+                testClient.setAttribute('email', 'mario.rossi@esempio.com');
+                testClient.setAttribute('telefono', '+39 123 456 7890');
+                testClient.setAttribute('azienda', 'Acme Corp');
+                testClient.setAttribute('ruolo', 'Sviluppatore Senior');
+                testClient.setAttribute('note', 'Cliente molto importante per il progetto MVP');
+
+                await window.storageManager.save(`entity_${testClient.id}`, testClient.serialize());
+                
+                alert('✅ Cliente test creato con successo!');
+                updateSystemStats();
+            } catch (error) {
+                alert(`❌ Errore creazione cliente: ${error.message}`);
+            }
+        }
+
+        async function loadContactCard() {
+            try {
+                // Assicurati che ci sia un cliente test
+                if (!testClient) {
+                    await createTestClient();
+                }
+
+                // Registra l'entità nell'AttributeSpace
+                window.attributeSpace.registerEntity(testClient);
+
+                // Carica definizione modulo (simulato - in produzione da file JSON)
+                const moduleData = {
+                    module_id: 'contact-card-demo',
+                    version: '1.0.0',
+                    name: 'Contact Card Demo',
+                    slots: {
+                        nome: { path: 'Cliente.nome', type: 'text', editable: true, label: 'Nome' },
+                        email: { path: 'Cliente.email', type: 'email', editable: true, label: 'Email' },
+                        telefono: { path: 'Cliente.telefono', type: 'text', editable: true, label: 'Telefono' },
+                        azienda: { path: 'Cliente.azienda', type: 'text', editable: true, label: 'Azienda' },
+                        ruolo: { path: 'Cliente.ruolo', type: 'text', editable: true, label: 'Ruolo' }
+                    },
+                    layout: {
+                        type: 'card',
+                        elements: [
+                            { element: 'h3', slot: 'nome', attributes: { style: 'margin-top: 0; color: #2c3e50;' } },
+                            { element: 'p', slot: 'ruolo', attributes: { style: 'color: #7f8c8d; margin: 5px 0;' } },
+                            { element: 'div', children: [
+                                { element: 'label', content: 'Email:', attributes: { style: 'display: block; font-weight: bold; margin-top: 10px;' } },
+                                { element: 'input', slot: 'email', attributes: { type: 'email', style: 'width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px;' } }
+                            ]},
+                            { element: 'div', children: [
+                                { element: 'label', content: 'Telefono:', attributes: { style: 'display: block; font-weight: bold; margin-top: 10px;' } },
+                                { element: 'input', slot: 'telefono', attributes: { type: 'tel', style: 'width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px;' } }
+                            ]},
+                            { element: 'div', children: [
+                                { element: 'label', content: 'Azienda:', attributes: { style: 'display: block; font-weight: bold; margin-top: 10px;' } },
+                                { element: 'input', slot: 'azienda', attributes: { type: 'text', style: 'width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px;' } }
+                            ]}
+                        ]
+                    },
+                    styling: { theme: 'modern', spacing: 'normal' }
+                };
+
+                const moduleDefinition = new window.ModuleDefinition(moduleData);
+                
+                // Compila il modulo passando l'entità
+                contactCardModule = await window.moduleCompiler.compile(moduleDefinition, { entity: testClient });
+
+                // Renderizza nel container principale
+                const container = document.getElementById('contact-card-container');
+                contactCardModule.render(container, testClient);
+                container.classList.add('has-module');
+
+                // Renderizza anche nei container reattivi con binding separato
+                const reactive1 = document.getElementById('reactive-module-1');
+                const reactive2 = document.getElementById('reactive-module-2');
+                
+                // Crea istanze separate per ogni container
+                const module1 = await window.moduleCompiler.compile(moduleDefinition, { entity: testClient });
+                const module2 = await window.moduleCompiler.compile(moduleDefinition, { entity: testClient });
+                
+                module1.render(reactive1, testClient);
+                module2.render(reactive2, testClient);
+                reactive1.classList.add('has-module');
+                reactive2.classList.add('has-module');
+
+                // Setup listener per dimostrare la reattività
+                setupReactivityDemo();
+
+                alert('✅ Contact Card caricato con successo! Prova a modificare i campi per vedere la reattività.');
+            } catch (error) {
+                console.error('Errore dettagliato:', error);
+                alert(`❌ Errore caricamento modulo: ${error.message}`);
+            }
+        }
+
+        function setupReactivityDemo() {
+            // Ascolta cambiamenti negli attributi per dimostrare la reattività
+            window.attributeSpace.subscribeGlobal((event) => {
+                console.log('🔄 Cambiamento rilevato:', event);
+                
+                // Aggiorna il log per mostrare l'attività
+                const logElement = document.getElementById('test-log');
+                if (logElement && event && event.entityType) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    logElement.textContent += `\n[${timestamp}] Attributo modificato: ${event.entityType}.${event.attributeName} = "${event.newValue}"`;
+                    logElement.scrollTop = logElement.scrollHeight;
+                }
+            });
+        }
+
+        async function updateSystemStats() {
+            try {
+                const stats = {
+                    storage: window.storageManager.getStats(),
+                    attributeSpace: window.attributeSpace.getStats(),
+                    eventBus: window.eventBus.getStats(),
+                    moduleCompiler: window.moduleCompiler.getStats()
+                };
+
+                const statsElement = document.getElementById('system-stats');
+                statsElement.textContent = JSON.stringify(stats, null, 2);
+            } catch (error) {
+                document.getElementById('system-stats').textContent = `Errore: ${error.message}`;
+            }
+        }
+
+        async function clearAllData() {
+            if (confirm('Sei sicuro di voler cancellare tutti i dati?')) {
+                try {
+                    await window.storageManager.clear();
+                    window.attributeSpace.clear();
+                    window.eventBus.removeAllListeners();
+                    window.moduleCompiler.clearCache();
+                    
+                    alert('✅ Tutti i dati sono stati cancellati!');
+                    updateSystemStats();
+                } catch (error) {
+                    alert(`❌ Errore cancellazione: ${error.message}`);
+                }
+            }
+        }
+
+        // Le statistiche verranno aggiornate automaticamente dopo l'inizializzazione
+    </script>
+</body>
+</html> 

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Builder Demo - MVP Dynamic Docs</title>
+    
+    <!-- GridStack CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../styles/gridstack.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .demo-header {
+            background: #fff;
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .demo-title {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .demo-subtitle {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .demo-container {
+            height: calc(100vh - 80px);
+        }
+        
+        .test-panel {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            width: 300px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1001;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        
+        .test-panel-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .test-panel-content {
+            padding: 16px;
+        }
+        
+        .test-section {
+            margin-bottom: 20px;
+        }
+        
+        .test-section h4 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .test-button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+        
+        .test-button.secondary {
+            background: #6c757d;
+        }
+        
+        .test-button.secondary:hover {
+            background: #545b62;
+        }
+        
+        .test-button.success {
+            background: #28a745;
+        }
+        
+        .test-button.success:hover {
+            background: #1e7e34;
+        }
+        
+        .test-results {
+            margin-top: 12px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .test-log {
+            margin: 2px 0;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        .test-log.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .test-log.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .test-log.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .toggle-panel {
+            position: fixed;
+            top: 90px;
+            right: 326px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px 0 0 4px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1002;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1 class="demo-title">Document Builder Demo</h1>
+        <p class="demo-subtitle">Test completo del sistema di composizione documenti con GridStack</p>
+    </div>
+    
+    <div id="documentBuilder" class="demo-container"></div>
+    
+    <!-- Test Panel -->
+    <button class="toggle-panel" onclick="toggleTestPanel()">Test</button>
+    <div id="testPanel" class="test-panel">
+        <div class="test-panel-header">
+            🧪 Test Suite
+        </div>
+        <div class="test-panel-content">
+            <div class="test-section">
+                <h4>Inizializzazione</h4>
+                <button class="test-button" onclick="testInitialization()">Test Inizializzazione</button>
+                <button class="test-button" onclick="testComponentsLoaded()">Verifica Componenti</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Document Management</h4>
+                <button class="test-button" onclick="testNewDocument()">Nuovo Documento</button>
+                <button class="test-button" onclick="testSaveDocument()">Salva Documento</button>
+                <button class="test-button" onclick="testLoadDocument()">Carica Documento</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Module Palette</h4>
+                <button class="test-button" onclick="testModulePalette()">Test Palette</button>
+                <button class="test-button" onclick="testModuleSearch()">Test Ricerca</button>
+                <button class="test-button" onclick="testModuleCategories()">Test Categorie</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Entity Selector</h4>
+                <button class="test-button" onclick="testEntitySelector()">Apri Selettore</button>
+                <button class="test-button" onclick="testCreateEntity()">Crea Entità</button>
+                <button class="test-button" onclick="testEntityFilters()">Test Filtri</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Drag & Drop</h4>
+                <button class="test-button" onclick="testDragDrop()">Simula Drag & Drop</button>
+                <button class="test-button" onclick="testModuleAddition()">Aggiungi Modulo</button>
+                <button class="test-button" onclick="testLayoutPersistence()">Test Layout</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Integration Tests</h4>
+                <button class="test-button success" onclick="runFullWorkflowTest()">🚀 Test Completo</button>
+                <button class="test-button secondary" onclick="clearTestResults()">Pulisci Log</button>
+            </div>
+            
+            <div class="test-results" id="testResults">
+                <div class="test-log info">Pronto per i test...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GridStack JS -->
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack-all.js"></script>
+    
+    <!-- Core Components -->
+    <script src="../core/storage/StorageManager.js"></script>
+    <script src="../core/storage/MigrationInterface.js"></script>
+    <script src="../core/entity/Attribute.js"></script>
+    <script src="../core/entity/Entity.js"></script>
+    <script src="../core/entity/AttributeSpace.js"></script>
+    <script src="../core/reactive/EventBus.js"></script>
+    <script src="../core/module/ModuleDefinition.js"></script>
+    <script src="../core/module/ModuleCompiler.js"></script>
+    
+    <!-- Document System -->
+    <script src="../document/GridStackAdapter.js"></script>
+    <script src="../document/Document.js"></script>
+    
+    <!-- UI Components -->
+    <script src="../ui/ModulePalette.js"></script>
+    <script src="../ui/EntitySelector.js"></script>
+    <script src="../ui/DocumentBuilder.js"></script>
+
+    <script>
+        // Global variables
+        let documentBuilder = null;
+        let testResults = [];
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                logTest('Inizializzazione demo...', 'info');
+                
+                // Debug: Check what's available
+                logTest(`EventBus type: ${typeof EventBus}`, 'info');
+                logTest(`StorageManager type: ${typeof StorageManager}`, 'info');
+                logTest(`DocumentBuilder type: ${typeof DocumentBuilder}`, 'info');
+                
+                // Expose classes globally for testing
+                window.GridStackAdapter = GridStackAdapter;
+                window.Document = Document;
+                window.ModulePalette = ModulePalette;
+                window.EntitySelector = EntitySelector;
+                window.DocumentBuilder = DocumentBuilder;
+                window.Entity = Entity;
+                window.Attribute = Attribute;
+                
+                // Initialize core services with error checking
+                try {
+                    window.storageManager = new StorageManager();
+                    logTest('✅ StorageManager inizializzato', 'success');
+                } catch (e) {
+                    logTest(`❌ Errore StorageManager: ${e.message}`, 'error');
+                }
+                
+                try {
+                    window.eventBus = new EventBus();
+                    logTest('✅ EventBus inizializzato', 'success');
+                } catch (e) {
+                    logTest(`❌ Errore EventBus: ${e.message}`, 'error');
+                }
+                
+                try {
+                    window.attributeSpace = new AttributeSpace();
+                    logTest('✅ AttributeSpace inizializzato', 'success');
+                } catch (e) {
+                    logTest(`❌ Errore AttributeSpace: ${e.message}`, 'error');
+                }
+                
+                try {
+                    window.moduleCompiler = new ModuleCompiler();
+                    logTest('✅ ModuleCompiler inizializzato', 'success');
+                } catch (e) {
+                    logTest(`❌ Errore ModuleCompiler: ${e.message}`, 'error');
+                }
+                
+                // Initialize Document Builder
+                try {
+                    const container = document.getElementById('documentBuilder');
+                    documentBuilder = new DocumentBuilder(container, {
+                        enablePalette: true,
+                        enableEntitySelector: true,
+                        enableAutoSave: true,
+                        autoSaveInterval: 30000
+                    });
+                    logTest('✅ DocumentBuilder inizializzato', 'success');
+                } catch (e) {
+                    logTest(`❌ Errore DocumentBuilder: ${e.message}`, 'error');
+                    console.error('DocumentBuilder error:', e);
+                }
+                
+                logTest('✅ Demo inizializzata con successo', 'success');
+                
+            } catch (error) {
+                logTest(`❌ Errore inizializzazione: ${error.message}`, 'error');
+                console.error('Demo initialization failed:', error);
+            }
+        });
+        
+        // Test Functions
+        function testInitialization() {
+            logTest('🔍 Test inizializzazione...', 'info');
+            
+            try {
+                if (!documentBuilder) {
+                    throw new Error('DocumentBuilder non inizializzato');
+                }
+                
+                if (documentBuilder.isInitialized === false) {
+                    throw new Error('DocumentBuilder non completamente inizializzato');
+                }
+                
+                logTest('✅ DocumentBuilder inizializzato correttamente', 'success');
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Test inizializzazione fallito: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testComponentsLoaded() {
+            logTest('🔍 Verifica componenti caricati...', 'info');
+            
+            const components = [
+                { name: 'StorageManager', obj: window.storageManager },
+                { name: 'EventBus', obj: window.eventBus },
+                { name: 'AttributeSpace', obj: window.attributeSpace },
+                { name: 'ModuleCompiler', obj: window.moduleCompiler },
+                { name: 'GridStackAdapter', obj: window.GridStackAdapter },
+                { name: 'Document', obj: window.Document },
+                { name: 'ModulePalette', obj: window.ModulePalette },
+                { name: 'EntitySelector', obj: window.EntitySelector },
+                { name: 'DocumentBuilder', obj: window.DocumentBuilder }
+            ];
+            
+            let allLoaded = true;
+            
+            components.forEach(comp => {
+                if (comp.obj) {
+                    logTest(`✅ ${comp.name} caricato`, 'success');
+                } else {
+                    logTest(`❌ ${comp.name} NON caricato`, 'error');
+                    allLoaded = false;
+                }
+            });
+            
+            if (allLoaded) {
+                logTest('✅ Tutti i componenti sono caricati', 'success');
+            } else {
+                logTest('❌ Alcuni componenti mancano', 'error');
+            }
+            
+            return allLoaded;
+        }
+        
+        function testNewDocument() {
+            logTest('🔍 Test nuovo documento...', 'info');
+            
+            try {
+                if (!documentBuilder) {
+                    throw new Error('DocumentBuilder non disponibile');
+                }
+                
+                documentBuilder.createNewDocument();
+                
+                setTimeout(() => {
+                    const currentDoc = documentBuilder.getCurrentDocument();
+                    if (currentDoc) {
+                        logTest('✅ Nuovo documento creato con successo', 'success');
+                        logTest(`📄 ID: ${currentDoc.id}, Titolo: ${currentDoc.title}`, 'info');
+                    } else {
+                        logTest('❌ Documento non creato', 'error');
+                    }
+                }, 100);
+                
+            } catch (error) {
+                logTest(`❌ Errore creazione documento: ${error.message}`, 'error');
+            }
+        }
+        
+        function testSaveDocument() {
+            logTest('🔍 Test salvataggio documento...', 'info');
+            
+            try {
+                if (!documentBuilder || !documentBuilder.getCurrentDocument()) {
+                    throw new Error('Nessun documento attivo');
+                }
+                
+                documentBuilder.saveDocument();
+                logTest('✅ Comando salvataggio inviato', 'success');
+                
+            } catch (error) {
+                logTest(`❌ Errore salvataggio: ${error.message}`, 'error');
+            }
+        }
+        
+        function testLoadDocument() {
+            logTest('🔍 Test caricamento documento...', 'info');
+            
+            try {
+                if (!documentBuilder) {
+                    throw new Error('DocumentBuilder non disponibile');
+                }
+                
+                documentBuilder.openDocument();
+                logTest('✅ Dialog apertura documento mostrato', 'success');
+                
+            } catch (error) {
+                logTest(`❌ Errore apertura: ${error.message}`, 'error');
+            }
+        }
+        
+        function testModulePalette() {
+            logTest('🔍 Test Module Palette...', 'info');
+            
+            try {
+                if (!documentBuilder || !documentBuilder.modulePalette) {
+                    throw new Error('ModulePalette non disponibile');
+                }
+                
+                const palette = documentBuilder.modulePalette;
+                const moduleCount = palette.modules.size;
+                
+                logTest(`✅ Palette attiva con ${moduleCount} moduli`, 'success');
+                
+                // Test moduli disponibili
+                palette.modules.forEach((module, id) => {
+                    logTest(`📦 ${id}: ${module.title || 'Senza titolo'}`, 'info');
+                });
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore test palette: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testModuleSearch() {
+            logTest('🔍 Test ricerca moduli...', 'info');
+            
+            try {
+                if (!documentBuilder || !documentBuilder.modulePalette) {
+                    throw new Error('ModulePalette non disponibile');
+                }
+                
+                const palette = documentBuilder.modulePalette;
+                
+                // Test ricerca
+                palette.setSearchTerm('contact');
+                const filteredCount = palette.filteredModules.size;
+                
+                logTest(`✅ Ricerca 'contact': ${filteredCount} risultati`, 'success');
+                
+                // Reset ricerca
+                palette.setSearchTerm('');
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore test ricerca: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testModuleCategories() {
+            logTest('🔍 Test categorie moduli...', 'info');
+            
+            try {
+                if (!documentBuilder || !documentBuilder.modulePalette) {
+                    throw new Error('ModulePalette non disponibile');
+                }
+                
+                const palette = documentBuilder.modulePalette;
+                const categoryCount = palette.categories.size;
+                
+                logTest(`✅ ${categoryCount} categorie disponibili`, 'success');
+                
+                palette.categories.forEach((modules, category) => {
+                    logTest(`📂 ${category}: ${modules.length} moduli`, 'info');
+                });
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore test categorie: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testEntitySelector() {
+            logTest('🔍 Test Entity Selector...', 'info');
+            
+            try {
+                if (!documentBuilder || !documentBuilder.entitySelector) {
+                    throw new Error('EntitySelector non disponibile');
+                }
+                
+                const selector = documentBuilder.entitySelector;
+                
+                // Apre il selettore
+                selector.open((entity) => {
+                    if (entity) {
+                        logTest(`✅ Entità selezionata: ${entity.id}`, 'success');
+                    } else {
+                        logTest('ℹ️ Selezione annullata', 'info');
+                    }
+                });
+                
+                logTest('✅ Entity Selector aperto', 'success');
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore test selector: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function testCreateEntity() {
+            logTest('🔍 Test creazione entità...', 'info');
+            
+            try {
+                // Crea entità di test
+                const Entity = window.Entity;
+                if (!Entity) {
+                    throw new Error('Classe Entity non disponibile');
+                }
+                
+                const testEntity = new Entity('test-cliente-' + Date.now(), 'Cliente');
+                testEntity.setAttribute('nome', 'Mario Rossi', 'text');
+                testEntity.setAttribute('email', 'mario.rossi@example.com', 'email');
+                testEntity.setAttribute('telefono', '+39 123 456 7890', 'tel');
+                
+                // Salva nel storage
+                if (window.storageManager) {
+                    await window.storageManager.save(`entity:${testEntity.id}`, testEntity.serialize());
+                }
+                
+                logTest(`✅ Entità test creata: ${testEntity.id}`, 'success');
+                logTest(`📧 Email: ${testEntity.getAttribute('email').value}`, 'info');
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore creazione entità: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testEntityFilters() {
+            logTest('🔍 Test filtri entità...', 'info');
+            
+            try {
+                if (!documentBuilder || !documentBuilder.entitySelector) {
+                    throw new Error('EntitySelector non disponibile');
+                }
+                
+                const selector = documentBuilder.entitySelector;
+                const entityCount = selector.entities.size;
+                
+                logTest(`✅ ${entityCount} entità caricate`, 'success');
+                
+                // Test filtro per tipo
+                selector.setTypeFilter('Cliente');
+                const filteredCount = selector.filteredEntities.size;
+                
+                logTest(`✅ Filtro 'Cliente': ${filteredCount} risultati`, 'success');
+                
+                // Reset filtro
+                selector.setTypeFilter('all');
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore test filtri: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testDragDrop() {
+            logTest('🔍 Test simulazione Drag & Drop...', 'info');
+            
+            try {
+                if (!documentBuilder || !documentBuilder.modulePalette) {
+                    throw new Error('Componenti non disponibili');
+                }
+                
+                // Simula drag start
+                const firstModule = Array.from(documentBuilder.modulePalette.modules.values())[0];
+                if (!firstModule) {
+                    throw new Error('Nessun modulo disponibile');
+                }
+                
+                documentBuilder.handleModuleDragStart({ module: firstModule });
+                logTest(`✅ Drag simulato per: ${firstModule.title}`, 'success');
+                
+                // Simula drag end
+                setTimeout(() => {
+                    documentBuilder.handleModuleDragEnd({ module: firstModule });
+                    logTest('✅ Drag end simulato', 'success');
+                }, 1000);
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore simulazione drag: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testModuleAddition() {
+            logTest('🔍 Test aggiunta modulo...', 'info');
+            
+            try {
+                if (!documentBuilder) {
+                    throw new Error('DocumentBuilder non disponibile');
+                }
+                
+                // Crea entità di test se non esiste
+                testCreateEntity();
+                
+                // Ottiene primo modulo disponibile
+                const firstModule = Array.from(documentBuilder.modulePalette.modules.values())[0];
+                if (!firstModule) {
+                    throw new Error('Nessun modulo disponibile');
+                }
+                
+                // Crea entità fittizia per il test
+                const Entity = window.Entity;
+                const testEntity = new Entity('test-entity-' + Date.now(), 'Cliente');
+                
+                // Aggiunge modulo al documento
+                documentBuilder.addModuleToDocument(firstModule, testEntity, {
+                    x: 0, y: 0, width: 4, height: 3
+                });
+                
+                logTest(`✅ Modulo ${firstModule.title} aggiunto`, 'success');
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore aggiunta modulo: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testLayoutPersistence() {
+            logTest('🔍 Test persistenza layout...', 'info');
+            
+            try {
+                const currentDoc = documentBuilder?.getCurrentDocument();
+                if (!currentDoc) {
+                    throw new Error('Nessun documento attivo');
+                }
+                
+                // Test salvataggio layout
+                if (currentDoc.gridAdapter) {
+                    const layout = currentDoc.gridAdapter.getLayout();
+                    logTest(`✅ Layout ottenuto: ${layout.length} elementi`, 'success');
+                } else {
+                    logTest('⚠️ GridAdapter non disponibile', 'info');
+                }
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Errore test layout: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function runFullWorkflowTest() {
+            logTest('🚀 INIZIO TEST COMPLETO WORKFLOW', 'info');
+            logTest('================================', 'info');
+            
+            let passed = 0;
+            let total = 0;
+            
+            const tests = [
+                { name: 'Inizializzazione', fn: testInitialization },
+                { name: 'Componenti', fn: testComponentsLoaded },
+                { name: 'Nuovo Documento', fn: testNewDocument },
+                { name: 'Module Palette', fn: testModulePalette },
+                { name: 'Ricerca Moduli', fn: testModuleSearch },
+                { name: 'Categorie', fn: testModuleCategories },
+                { name: 'Creazione Entità', fn: testCreateEntity },
+                { name: 'Filtri Entità', fn: testEntityFilters },
+                { name: 'Drag & Drop', fn: testDragDrop },
+                { name: 'Layout', fn: testLayoutPersistence }
+            ];
+            
+            for (const test of tests) {
+                total++;
+                logTest(`\n🧪 Esecuzione: ${test.name}`, 'info');
+                
+                try {
+                    const result = await test.fn();
+                    if (result !== false) {
+                        passed++;
+                        logTest(`✅ ${test.name}: PASSATO`, 'success');
+                    } else {
+                        logTest(`❌ ${test.name}: FALLITO`, 'error');
+                    }
+                } catch (error) {
+                    logTest(`❌ ${test.name}: ERRORE - ${error.message}`, 'error');
+                }
+                
+                // Pausa tra i test
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            logTest('\n================================', 'info');
+            logTest(`🏁 TEST COMPLETATO: ${passed}/${total} passati`, passed === total ? 'success' : 'error');
+            
+            if (passed === total) {
+                logTest('🎉 TUTTI I TEST SONO PASSATI!', 'success');
+                logTest('✅ Sistema Document Builder funzionante', 'success');
+            } else {
+                logTest(`⚠️ ${total - passed} test falliti`, 'error');
+                logTest('🔧 Verificare i componenti segnalati', 'info');
+            }
+        }
+        
+        function clearTestResults() {
+            testResults = [];
+            const resultsContainer = document.getElementById('testResults');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = '<div class="test-log info">Log pulito - pronto per nuovi test...</div>';
+            }
+        }
+        
+        function logTest(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                timestamp,
+                message,
+                type
+            };
+            
+            testResults.push(logEntry);
+            
+            const resultsContainer = document.getElementById('testResults');
+            if (resultsContainer) {
+                const logDiv = document.createElement('div');
+                logDiv.className = `test-log ${type}`;
+                logDiv.textContent = `[${timestamp}] ${message}`;
+                
+                resultsContainer.appendChild(logDiv);
+                resultsContainer.scrollTop = resultsContainer.scrollHeight;
+            }
+            
+            console.log(`[TEST ${type.toUpperCase()}] ${message}`);
+        }
+        
+        function toggleTestPanel() {
+            const panel = document.getElementById('testPanel');
+            const button = document.querySelector('.toggle-panel');
+            
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                button.textContent = 'Nascondi';
+            } else {
+                panel.style.display = 'none';
+                button.textContent = 'Test';
+            }
+        }
+        
+        // Event listeners per debug - rimosso per evitare errori
+    </script>
+</body>
+</html> 

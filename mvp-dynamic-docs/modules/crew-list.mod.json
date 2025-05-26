@@ -1,0 +1,543 @@
+{
+  "module_id": "crew-list",
+  "version": "1.0.0",
+  "name": "Crew List",
+  "description": "Lista del crew per shooting day con gestione presenze e orari",
+  "author": "MVP Dynamic Docs Team",
+  "tags": ["crew", "shooting", "callsheet", "production", "list"],
+  
+  "slots": {
+    "shootingDate": {
+      "path": "ShootingDay.data",
+      "type": "date",
+      "editable": true,
+      "required": true,
+      "label": "Data Shooting",
+      "format": "dd/MM/yyyy"
+    },
+    "location": {
+      "path": "ShootingDay.location",
+      "type": "text",
+      "editable": true,
+      "required": true,
+      "label": "Location",
+      "placeholder": "Indirizzo location"
+    },
+    "callTime": {
+      "path": "ShootingDay.callTime",
+      "type": "time",
+      "editable": true,
+      "required": true,
+      "label": "Call Time",
+      "defaultValue": "08:00"
+    },
+    "crewMembers": {
+      "path": "ShootingDay.crewMembers",
+      "type": "array",
+      "editable": true,
+      "required": false,
+      "label": "Membri del Crew",
+      "itemType": "object",
+      "itemSchema": {
+        "nome": { "type": "text", "required": true },
+        "ruolo": { "type": "text", "required": true },
+        "telefono": { "type": "text", "required": false },
+        "email": { "type": "email", "required": false },
+        "callTime": { "type": "time", "required": true, "defaultValue": "08:00" },
+        "presente": { "type": "boolean", "required": false, "defaultValue": false },
+        "note": { "type": "text", "required": false }
+      }
+    },
+    "notes": {
+      "path": "ShootingDay.notes",
+      "type": "textarea",
+      "editable": true,
+      "required": false,
+      "label": "Note Generali",
+      "placeholder": "Note per il shooting day"
+    }
+  },
+  
+  "layout": {
+    "type": "list",
+    "sections": [
+      {
+        "type": "header",
+        "elements": [
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-header"
+            },
+            "children": [
+              {
+                "element": "h3",
+                "content": "Crew List",
+                "attributes": {
+                  "class": "crew-title"
+                }
+              },
+              {
+                "element": "div",
+                "attributes": {
+                  "class": "shooting-info"
+                },
+                "children": [
+                  {
+                    "element": "div",
+                    "attributes": {
+                      "class": "info-item"
+                    },
+                    "children": [
+                      {
+                        "element": "label",
+                        "content": "Data:",
+                        "attributes": {
+                          "class": "info-label"
+                        }
+                      },
+                      {
+                        "element": "input",
+                        "slot": "shootingDate",
+                        "attributes": {
+                          "type": "date",
+                          "class": "info-input"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "element": "div",
+                    "attributes": {
+                      "class": "info-item"
+                    },
+                    "children": [
+                      {
+                        "element": "label",
+                        "content": "Location:",
+                        "attributes": {
+                          "class": "info-label"
+                        }
+                      },
+                      {
+                        "element": "input",
+                        "slot": "location",
+                        "attributes": {
+                          "type": "text",
+                          "class": "info-input"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "element": "div",
+                    "attributes": {
+                      "class": "info-item"
+                    },
+                    "children": [
+                      {
+                        "element": "label",
+                        "content": "Call Time:",
+                        "attributes": {
+                          "class": "info-label"
+                        }
+                      },
+                      {
+                        "element": "input",
+                        "slot": "callTime",
+                        "attributes": {
+                          "type": "time",
+                          "class": "info-input"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "body",
+        "elements": [
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-controls"
+            },
+            "children": [
+              {
+                "element": "button",
+                "content": "+ Aggiungi Membro",
+                "attributes": {
+                  "class": "btn btn-primary add-crew-btn",
+                  "type": "button",
+                  "data-action": "add-crew-member"
+                }
+              },
+              {
+                "element": "button",
+                "content": "Segna Tutti Presenti",
+                "attributes": {
+                  "class": "btn btn-secondary mark-all-present-btn",
+                  "type": "button",
+                  "data-action": "mark-all-present"
+                }
+              }
+            ]
+          },
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-list-container"
+            },
+            "children": [
+              {
+                "element": "div",
+                "attributes": {
+                  "class": "crew-list-header"
+                },
+                "children": [
+                  {
+                    "element": "div",
+                    "content": "Nome",
+                    "attributes": {
+                      "class": "header-cell header-nome"
+                    }
+                  },
+                  {
+                    "element": "div",
+                    "content": "Ruolo",
+                    "attributes": {
+                      "class": "header-cell header-ruolo"
+                    }
+                  },
+                  {
+                    "element": "div",
+                    "content": "Call Time",
+                    "attributes": {
+                      "class": "header-cell header-call-time"
+                    }
+                  },
+                  {
+                    "element": "div",
+                    "content": "Presente",
+                    "attributes": {
+                      "class": "header-cell header-presente"
+                    }
+                  },
+                  {
+                    "element": "div",
+                    "content": "Azioni",
+                    "attributes": {
+                      "class": "header-cell header-actions"
+                    }
+                  }
+                ]
+              },
+              {
+                "element": "div",
+                "slot": "crewMembers",
+                "attributes": {
+                  "class": "crew-list-items",
+                  "data-template": "crew-member-row"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "footer",
+        "elements": [
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-notes"
+            },
+            "children": [
+              {
+                "element": "label",
+                "content": "Note Generali:",
+                "attributes": {
+                  "class": "notes-label"
+                }
+              },
+              {
+                "element": "textarea",
+                "slot": "notes",
+                "attributes": {
+                  "class": "notes-textarea",
+                  "rows": "3"
+                }
+              }
+            ]
+          },
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-summary"
+            },
+            "children": [
+              {
+                "element": "span",
+                "content": "Totale crew: ",
+                "attributes": {
+                  "class": "summary-label"
+                }
+              },
+              {
+                "element": "span",
+                "attributes": {
+                  "class": "summary-value",
+                  "data-bind": "crewMembers.length"
+                }
+              },
+              {
+                "element": "span",
+                "content": " | Presenti: ",
+                "attributes": {
+                  "class": "summary-label"
+                }
+              },
+              {
+                "element": "span",
+                "attributes": {
+                  "class": "summary-value summary-present",
+                  "data-bind": "crewMembers.filter(m => m.presente).length"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "templates": {
+      "crew-member-row": {
+        "element": "div",
+        "attributes": {
+          "class": "crew-member-row",
+          "data-crew-id": "{{id}}"
+        },
+        "children": [
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-cell crew-nome"
+            },
+            "children": [
+              {
+                "element": "input",
+                "attributes": {
+                  "type": "text",
+                  "class": "crew-input",
+                  "placeholder": "Nome",
+                  "data-field": "nome",
+                  "value": "{{nome}}"
+                }
+              }
+            ]
+          },
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-cell crew-ruolo"
+            },
+            "children": [
+              {
+                "element": "select",
+                "attributes": {
+                  "class": "crew-select",
+                  "data-field": "ruolo"
+                },
+                "children": [
+                  {
+                    "element": "option",
+                    "content": "Regista",
+                    "attributes": {
+                      "value": "regista"
+                    }
+                  },
+                  {
+                    "element": "option",
+                    "content": "Direttore Fotografia",
+                    "attributes": {
+                      "value": "dop"
+                    }
+                  },
+                  {
+                    "element": "option",
+                    "content": "Operatore",
+                    "attributes": {
+                      "value": "operatore"
+                    }
+                  },
+                  {
+                    "element": "option",
+                    "content": "Audio",
+                    "attributes": {
+                      "value": "audio"
+                    }
+                  },
+                  {
+                    "element": "option",
+                    "content": "Assistente",
+                    "attributes": {
+                      "value": "assistente"
+                    }
+                  },
+                  {
+                    "element": "option",
+                    "content": "Altro",
+                    "attributes": {
+                      "value": "altro"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-cell crew-call-time"
+            },
+            "children": [
+              {
+                "element": "input",
+                "attributes": {
+                  "type": "time",
+                  "class": "crew-input",
+                  "data-field": "callTime",
+                  "value": "{{callTime}}"
+                }
+              }
+            ]
+          },
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-cell crew-presente"
+            },
+            "children": [
+              {
+                "element": "input",
+                "attributes": {
+                  "type": "checkbox",
+                  "class": "crew-checkbox",
+                  "data-field": "presente",
+                  "checked": "{{presente}}"
+                }
+              }
+            ]
+          },
+          {
+            "element": "div",
+            "attributes": {
+              "class": "crew-cell crew-actions"
+            },
+            "children": [
+              {
+                "element": "button",
+                "content": "📞",
+                "attributes": {
+                  "class": "btn btn-small btn-call",
+                  "type": "button",
+                  "title": "Chiama",
+                  "data-action": "call",
+                  "data-phone": "{{telefono}}"
+                }
+              },
+              {
+                "element": "button",
+                "content": "✉️",
+                "attributes": {
+                  "class": "btn btn-small btn-email",
+                  "type": "button",
+                  "title": "Email",
+                  "data-action": "email",
+                  "data-email": "{{email}}"
+                }
+              },
+              {
+                "element": "button",
+                "content": "🗑️",
+                "attributes": {
+                  "class": "btn btn-small btn-delete",
+                  "type": "button",
+                  "title": "Rimuovi",
+                  "data-action": "delete"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  
+  "styling": {
+    "theme": "production",
+    "spacing": "compact",
+    "colors": {
+      "primary": "#e74c3c",
+      "secondary": "#34495e",
+      "success": "#27ae60",
+      "warning": "#f39c12",
+      "background": "#ffffff",
+      "border": "#bdc3c7",
+      "text": "#2c3e50",
+      "textSecondary": "#7f8c8d"
+    },
+    "typography": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "fontSize": "13px",
+      "lineHeight": "1.4"
+    },
+    "layout": {
+      "padding": "15px",
+      "borderRadius": "6px",
+      "boxShadow": "0 1px 5px rgba(0,0,0,0.1)"
+    },
+    "responsive": {
+      "mobile": {
+        "padding": "10px",
+        "fontSize": "12px"
+      }
+    }
+  },
+  
+  "behavior": {
+    "autoSave": true,
+    "autoSaveDelay": 2000,
+    "validateOnChange": true,
+    "showValidationErrors": true,
+    "confirmBeforeDelete": true,
+    "sortable": true,
+    "filterable": true,
+    "searchable": true,
+    "exportable": true,
+    "animations": {
+      "enabled": true,
+      "duration": 200,
+      "easing": "ease-out"
+    },
+    "shortcuts": {
+      "addMember": "Ctrl+N",
+      "markAllPresent": "Ctrl+A",
+      "export": "Ctrl+E"
+    }
+  },
+  
+  "dependencies": [],
+  
+  "metadata": {
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-01-15T10:00:00Z",
+    "schema_version": 1,
+    "compatible_entities": ["ShootingDay", "Production", "Event"],
+    "min_platform_version": "1.0.0",
+    "use_cases": ["film-production", "event-management", "team-coordination"]
+  }
+} 
