@@ -5,6 +5,7 @@
 class AttributeSpace {
     constructor() {
         this.attributes = new Map(); // entityId+attrName -> Attribute
+        this.entities = new Map(); // entityId -> Entity
         this.subscriptions = new Map(); // attrKey -> Set<callback>
         this.entitySubscriptions = new Map(); // entityId -> Set<callback>
         this.typeSubscriptions = new Map(); // entityType -> Set<callback>
@@ -23,9 +24,22 @@ class AttributeSpace {
     registerEntity(entity) {
         console.log(`[AttributeSpace] Registrazione entità: ${entity.id} (${entity.type})`);
         
+        // Registra l'entità nella mappa
+        this.entities.set(entity.id, entity);
+        
         // Registra tutti gli attributi esistenti
-        for (const [name, attribute] of entity.attributes) {
-            this.registerAttribute(entity.id, attribute);
+        if (entity.attributes) {
+            if (entity.attributes instanceof Map) {
+                // Entity usa Map per gli attributi
+                for (const [name, attribute] of entity.attributes) {
+                    this.registerAttribute(entity.id, attribute);
+                }
+            } else {
+                // Oggetto normale
+                for (const [name, attribute] of Object.entries(entity.attributes)) {
+                    this.registerAttribute(entity.id, attribute);
+                }
+            }
         }
         
         // Ascolta i cambiamenti futuri dell'entità
@@ -52,6 +66,69 @@ class AttributeSpace {
             entity,
             timestamp: new Date().toISOString()
         });
+    }
+
+    /**
+     * Rimuove un'entità dal registry
+     * @param {string} entityId - ID dell'entità da rimuovere
+     */
+    unregisterEntity(entityId) {
+        const entity = this.entities.get(entityId);
+        if (!entity) return;
+
+        console.log(`[AttributeSpace] Rimozione entità: ${entityId}`);
+        
+        // Rimuovi tutti gli attributi dell'entità
+        if (entity.attributes) {
+            for (const attributeName of Object.keys(entity.attributes)) {
+                this.unregisterAttribute(entityId, attributeName);
+            }
+        }
+        
+        // Rimuovi l'entità dalla mappa
+        this.entities.delete(entityId);
+        
+        // Rimuovi sottoscrizioni dell'entità
+        this.entitySubscriptions.delete(entityId);
+        
+        // Notifica rimozione entità
+        this.notifyChange('entity:unregistered', {
+            entityId,
+            entity,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    /**
+     * Ottiene un'entità dal registry
+     * @param {string} entityId - ID dell'entità
+     * @returns {Entity|null}
+     */
+    getEntity(entityId) {
+        return this.entities.get(entityId) || null;
+    }
+
+    /**
+     * Ottiene tutte le entità registrate
+     * @returns {Map<string, Entity>}
+     */
+    getAllEntities() {
+        return new Map(this.entities);
+    }
+
+    /**
+     * Ottiene entità per tipo
+     * @param {string} entityType - Tipo di entità
+     * @returns {Array<Entity>}
+     */
+    getEntitiesByType(entityType) {
+        const result = [];
+        for (const entity of this.entities.values()) {
+            if (entity.type === entityType) {
+                result.push(entity);
+            }
+        }
+        return result;
     }
 
     /**
@@ -245,7 +322,7 @@ class AttributeSpace {
         // Notifica sottoscrittori globali
         console.log(`[AttributeSpace] Notifica ${this.globalSubscriptions.size} sottoscrittori globali per evento:`, eventType, changeData);
         for (const callback of this.globalSubscriptions) {
-            this.safeCallback(callback, changeData);
+            this.safeCallback(callback, { eventType, ...changeData });
         }
         
         // Emit evento DOM globale

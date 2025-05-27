@@ -1,0 +1,45 @@
+{
+  "module_id": "entity-list",
+  "version": "1.0.0",
+  "name": "Elenco Entità",
+  "description": "Tabella semplice con tutte le entità del sistema",
+  "author": "MVP System",
+  "tags": ["entities", "table", "management"],
+  "metadata": {
+    "category": "System"
+  },
+  "slots": {
+    "entities": {
+      "path": "System.allEntities",
+      "type": "text",
+      "editable": true,
+      "required": false,
+      "label": "Tutte le Entità"
+    }
+  },
+  "layout": {
+    "type": "table",
+    "title": "Elenco di tutte le entità",
+    "elements": [
+      {
+        "slot": "entities",
+        "element": "div",
+        "class": "entity-list-table",
+        "attributes": {
+          "data-entity-table": "true",
+          "data-editable": "true",
+          "data-sortable": "true"
+        }
+      }
+    ]
+  },
+  "styling": {
+    "theme": "modern",
+    "spacing": "compact"
+  },
+  "behavior": {
+    "autoRefresh": true,
+    "saveOnChange": true,
+    "showEmptyState": true
+  }
+} 

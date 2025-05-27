@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Generatore Moduli - MVP Dynamic Docs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .module-preview {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 200px;
+        }
+
+        .module-preview h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .module-preview .preview-content {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .status-bar {
+            background: #e9ecef;
+            padding: 15px 30px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .status-dot.error {
+            background: #dc3545;
+        }
+
+        .status-dot.warning {
+            background: #ffc107;
+        }
+
+        .log-area {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-entry.info {
+            color: #3498db;
+        }
+
+        .log-entry.success {
+            color: #2ecc71;
+        }
+
+        .log-entry.error {
+            color: #e74c3c;
+        }
+
+        .log-entry.warning {
+            color: #f39c12;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Test Generatore Moduli</h1>
+            <p>Crea e testa moduli dinamici con apertura automatica in nuova scheda</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Sezione Creazione Modulo -->
+            <div class="section">
+                <h2>📝 Creazione Modulo</h2>
+                
+                <div class="form-group">
+                    <label for="moduleType">Tipo Modulo:</label>
+                    <select id="moduleType">
+                        <option value="contact-card">Scheda Contatto</option>
+                        <option value="crew-member">Membro Crew</option>
+                        <option value="task-item">Task Item</option>
+                        <option value="weather-widget">Widget Meteo</option>
+                        <option value="custom">Personalizzato</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="entityName">Nome Entità:</label>
+                    <input type="text" id="entityName" placeholder="es. Cliente, Persona, Progetto" value="Cliente">
+                </div>
+
+                <div class="form-group">
+                    <label for="moduleTitle">Titolo Modulo:</label>
+                    <input type="text" id="moduleTitle" placeholder="es. Scheda Contatto Cliente" value="Scheda Contatto">
+                </div>
+
+                <div class="form-group">
+                    <label for="moduleFields">Campi (JSON):</label>
+                    <textarea id="moduleFields" placeholder='{"nome": "text", "email": "email", "telefono": "text"}'>{
+  "nome": "text",
+  "email": "email", 
+  "telefono": "text",
+  "azienda": "text",
+  "note": "textarea"
+}</textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn" onclick="generateModule()">🔧 Genera Modulo</button>
+                    <button class="btn btn-secondary" onclick="loadTemplate()">📋 Carica Template</button>
+                    <button class="btn btn-success" onclick="testModule()">🚀 Test in Nuova Scheda</button>
+                </div>
+
+                <div class="module-preview">
+                    <h3>Anteprima Modulo Generato:</h3>
+                    <div class="preview-content" id="modulePreview">
+                        Seleziona un tipo di modulo e clicca "Genera Modulo" per vedere l'anteprima...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione Test e Debug -->
+            <div class="section">
+                <h2>🔍 Test e Debug</h2>
+                
+                <div class="form-group">
+                    <label for="testEntityData">Dati Entità Test (JSON):</label>
+                    <textarea id="testEntityData">{
+  "nome": "Mario Rossi",
+  "email": "mario.rossi@esempio.com",
+  "telefono": "+39 123 456 7890",
+  "azienda": "Acme Corp",
+  "note": "Cliente importante per progetto Q1"
+}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="documentTitle">Titolo Documento:</label>
+                    <input type="text" id="documentTitle" placeholder="Titolo del documento" value="Documento Test - Scheda Contatto">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="validateModule()">✅ Valida Modulo</button>
+                    <button class="btn btn-danger" onclick="clearLog()">🗑️ Pulisci Log</button>
+                </div>
+
+                <div class="log-area" id="logArea">
+                    <div class="log-entry info">[INFO] Sistema pronto per generazione moduli</div>
+                    <div class="log-entry info">[INFO] Seleziona un tipo di modulo per iniziare</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Sistema Pronto</span>
+            </div>
+            <div>
+                <span id="moduleCount">0 moduli generati</span> | 
+                <span id="testCount">0 test eseguiti</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Core System -->
+    <script src="core/reactive/EventBus.js"></script>
+    <script src="core/entity/Attribute.js"></script>
+    <script src="core/entity/Entity.js"></script>
+    <script src="core/entity/AttributeSpace.js"></script>
+    <script src="core/module/ModuleDefinition.js"></script>
+    <script src="core/module/ModuleCompiler.js"></script>
+
+    <!-- Script per il generatore -->
+    <script>
+        // Stato globale dell'applicazione
+        let currentModule = null;
+        let moduleCount = 0;
+        let testCount = 0;
+
+        // Template predefiniti per diversi tipi di modulo
+        const moduleTemplates = {
+            'contact-card': {
+                title: 'Scheda Contatto',
+                entity: 'Cliente',
+                fields: {
+                    nome: 'text',
+                    email: 'email',
+                    telefono: 'text', // Cambiato da 'tel' a 'text'
+                    azienda: 'text',
+                    ruolo: 'text',
+                    note: 'textarea'
+                },
+                testData: {
+                    nome: 'Mario Rossi',
+                    email: 'mario.rossi@esempio.com',
+                    telefono: '+39 123 456 7890',
+                    azienda: 'Acme Corp',
+                    ruolo: 'CEO',
+                    note: 'Cliente importante per progetto Q1'
+                }
+            },
+            'crew-member': {
+                title: 'Membro Crew',
+                entity: 'Persona',
+                fields: {
+                    nome: 'text',
+                    ruolo: 'text',
+                    telefono: 'text', // Cambiato da 'tel' a 'text'
+                    email: 'email',
+                    disponibilita: 'text',
+                    note: 'textarea'
+                },
+                testData: {
+                    nome: 'Luca Bianchi',
+                    ruolo: 'Direttore Fotografia',
+                    telefono: '+39 987 654 3210',
+                    email: 'luca.bianchi@crew.com',
+                    disponibilita: 'Lun-Ven 9-18',
+                    note: 'Esperto in riprese aeree'
+                }
+            },
+            'task-item': {
+                title: 'Task Item',
+                entity: 'Task',
+                fields: {
+                    titolo: 'text',
+                    descrizione: 'textarea',
+                    priorita: 'text',
+                    scadenza: 'date',
+                    assegnato: 'text',
+                    stato: 'text'
+                },
+                testData: {
+                    titolo: 'Preparazione Set',
+                    descrizione: 'Allestire il set per la scena di apertura',
+                    priorita: 'Alta',
+                    scadenza: '2024-12-30',
+                    assegnato: 'Marco Verdi',
+                    stato: 'In Corso'
+                }
+            },
+            'weather-widget': {
+                title: 'Widget Meteo',
+                entity: 'Meteo',
+                fields: {
+                    citta: 'text',
+                    temperatura: 'number',
+                    condizioni: 'text',
+                    umidita: 'number',
+                    vento: 'text',
+                    previsioni: 'textarea'
+                },
+                testData: {
+                    citta: 'Milano',
+                    temperatura: 22,
+                    condizioni: 'Soleggiato',
+                    umidita: 65,
+                    vento: '10 km/h NE',
+                    previsioni: 'Giornata soleggiata con temperature miti'
+                }
+            }
+        };
+
+        // Funzione per caricare un template
+        function loadTemplate() {
+            const moduleType = document.getElementById('moduleType').value;
+            
+            if (moduleType === 'custom') {
+                log('info', 'Modalità personalizzata selezionata');
+                return;
+            }
+
+            const template = moduleTemplates[moduleType];
+            if (!template) {
+                log('error', `Template non trovato per tipo: ${moduleType}`);
+                return;
+            }
+
+            // Popola i campi con i dati del template
+            document.getElementById('entityName').value = template.entity;
+            document.getElementById('moduleTitle').value = template.title;
+            document.getElementById('moduleFields').value = JSON.stringify(template.fields, null, 2);
+            document.getElementById('testEntityData').value = JSON.stringify(template.testData, null, 2);
+            document.getElementById('documentTitle').value = `Documento Test - ${template.title}`;
+
+            log('success', `Template "${template.title}" caricato con successo`);
+            updateStatus('success', 'Template Caricato');
+        }
+
+        // Funzione per generare il modulo
+        function generateModule() {
+            try {
+                const moduleType = document.getElementById('moduleType').value;
+                const entityName = document.getElementById('entityName').value.trim();
+                const moduleTitle = document.getElementById('moduleTitle').value.trim();
+                const fieldsText = document.getElementById('moduleFields').value.trim();
+
+                // Validazione input
+                if (!entityName || !moduleTitle || !fieldsText) {
+                    throw new Error('Tutti i campi sono obbligatori');
+                }
+
+                // Parse dei campi
+                let fields;
+                try {
+                    fields = JSON.parse(fieldsText);
+                } catch (e) {
+                    throw new Error('Formato JSON non valido per i campi');
+                }
+
+                // Genera la definizione del modulo
+                const moduleDefinition = generateModuleDefinition(moduleType, entityName, moduleTitle, fields);
+                
+                // Mostra l'anteprima
+                document.getElementById('modulePreview').textContent = JSON.stringify(moduleDefinition, null, 2);
+                
+                // Salva il modulo corrente
+                currentModule = moduleDefinition;
+                moduleCount++;
+                
+                log('success', `Modulo "${moduleTitle}" generato con successo`);
+                updateStatus('success', 'Modulo Generato');
+                updateCounters();
+
+            } catch (error) {
+                log('error', `Errore generazione modulo: ${error.message}`);
+                updateStatus('error', 'Errore Generazione');
+            }
+        }
+
+        // Funzione per generare la definizione del modulo
+        function generateModuleDefinition(moduleType, entityName, moduleTitle, fields) {
+            const moduleId = `${moduleType}-${Date.now()}`;
+            
+            const slots = {};
+            const layoutElements = [];
+
+            // Identifica il campo principale (nome o titolo)
+            const mainField = fields.nome ? 'nome' : (fields.titolo ? 'titolo' : Object.keys(fields)[0]);
+
+            // Genera slots per ogni campo
+            Object.entries(fields).forEach(([fieldName, fieldType]) => {
+                slots[fieldName] = {
+                    path: `${entityName}.${fieldName}`,
+                    type: fieldType,
+                    editable: true,
+                    required: fieldName === mainField,
+                    label: formatFieldLabel(fieldName),
+                    placeholder: `Inserisci ${fieldName}`
+                };
+            });
+
+            // Crea il layout strutturato
+            const headerElements = [];
+            const bodyElements = [];
+
+            // Header con titolo modulo e campo principale
+            headerElements.push({
+                element: 'div',
+                attributes: { class: 'module-category' },
+                children: [{
+                    element: 'span',
+                    content: `${getModuleCategory(moduleType)} • ${entityName}`,
+                    attributes: { class: 'category-label' }
+                }]
+            });
+
+            if (mainField && fields[mainField]) {
+                headerElements.push({
+                    element: 'h2',
+                    slot: mainField,
+                    attributes: { class: 'entity-name' }
+                });
+            }
+
+            // Body con tutti gli altri campi
+            Object.entries(fields).forEach(([fieldName, fieldType]) => {
+                if (fieldName === mainField) return; // Skip campo principale già nel header
+
+                const inputElement = {
+                    element: fieldType === 'textarea' ? 'textarea' : 'input',
+                    slot: fieldName,
+                    attributes: {
+                        class: `field-input field-${fieldName}`,
+                        ...(fieldType !== 'textarea' && { type: fieldType })
+                    }
+                };
+
+                bodyElements.push({
+                    element: 'div',
+                    attributes: { class: 'field-group' },
+                    children: [
+                        {
+                            element: 'label',
+                            content: formatFieldLabel(fieldName),
+                            attributes: { class: 'field-label' }
+                        },
+                        inputElement
+                    ]
+                });
+            });
+
+            return {
+                module_id: moduleId,
+                version: '1.0.0',
+                metadata: {
+                    name: moduleTitle,
+                    description: `Modulo ${moduleTitle} generato automaticamente`,
+                    category: getModuleCategory(moduleType),
+                    author: 'Module Generator',
+                    generated: true,
+                    generatedAt: new Date().toISOString()
+                },
+                slots: slots,
+                layout: {
+                    type: 'card',
+                    elements: [
+                        {
+                            element: 'div',
+                            attributes: { class: 'module-header' },
+                            children: headerElements
+                        },
+                        {
+                            element: 'div',
+                            attributes: { class: 'module-body' },
+                            children: bodyElements
+                        }
+                    ]
+                },
+                styling: {
+                    theme: 'modern',
+                    spacing: 'normal',
+                    responsive: true
+                }
+            };
+        }
+
+        // Funzione per formattare le etichette dei campi
+        function formatFieldLabel(fieldName) {
+            const labels = {
+                nome: 'Nome Completo',
+                email: 'Email',
+                telefono: 'Telefono',
+                azienda: 'Azienda',
+                ruolo: 'Ruolo',
+                note: 'Note',
+                titolo: 'Titolo',
+                descrizione: 'Descrizione',
+                priorita: 'Priorità',
+                scadenza: 'Scadenza',
+                assegnato: 'Assegnato a',
+                stato: 'Stato',
+                citta: 'Città',
+                temperatura: 'Temperatura (°C)',
+                condizioni: 'Condizioni',
+                umidita: 'Umidità (%)',
+                vento: 'Vento',
+                previsioni: 'Previsioni',
+                disponibilita: 'Disponibilità'
+            };
+            
+            return labels[fieldName] || fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+        }
+
+        // Funzione per ottenere la categoria del modulo
+        function getModuleCategory(moduleType) {
+            const categories = {
+                'contact-card': 'Contact',
+                'crew-member': 'Production',
+                'task-item': 'Task',
+                'weather-widget': 'Utility'
+            };
+            return categories[moduleType] || 'Custom';
+        }
+
+        // Funzione per validare il modulo
+        function validateModule() {
+            if (!currentModule) {
+                log('warning', 'Nessun modulo da validare. Genera prima un modulo.');
+                return;
+            }
+
+            try {
+                // Validazione base della struttura
+                const required = ['module_id', 'version', 'metadata', 'slots', 'layout'];
+                const missing = required.filter(field => !currentModule[field]);
+                
+                if (missing.length > 0) {
+                    throw new Error(`Campi mancanti: ${missing.join(', ')}`);
+                }
+
+                // Validazione slots
+                if (Object.keys(currentModule.slots).length === 0) {
+                    throw new Error('Il modulo deve avere almeno uno slot');
+                }
+
+                // Validazione layout
+                if (!currentModule.layout.elements || currentModule.layout.elements.length === 0) {
+                    throw new Error('Il layout deve avere almeno un elemento');
+                }
+
+                log('success', 'Modulo validato con successo ✅');
+                log('info', `- ID: ${currentModule.module_id}`);
+                log('info', `- Slots: ${Object.keys(currentModule.slots).length}`);
+                log('info', `- Elementi Layout: ${currentModule.layout.elements.length}`);
+                
+                updateStatus('success', 'Modulo Valido');
+
+            } catch (error) {
+                log('error', `Validazione fallita: ${error.message}`);
+                updateStatus('error', 'Validazione Fallita');
+            }
+        }
+
+        // Funzione per testare il modulo in nuova scheda
+        async function testModule() {
+            if (!currentModule) {
+                log('warning', 'Genera prima un modulo da testare');
+                updateStatus('warning', 'Nessun Modulo');
+                return;
+            }
+
+            try {
+                await ensureCoreInitialized();
+
+                const testDataText = document.getElementById('testEntityData').value.trim();
+                const documentTitle = document.getElementById('documentTitle').value.trim() || currentModule.metadata.name;
+                let testData;
+                try {
+                    testData = JSON.parse(testDataText);
+                } catch (e) {
+                    log('error', 'Dati di test JSON non validi');
+                    updateStatus('error', 'Errore Dati Test');
+                    throw new Error('Dati di test JSON non validi');
+                }
+
+                // 1. Parse della definizione del modulo
+                const moduleDef = new ModuleDefinition(currentModule); // Passa direttamente l'oggetto al costruttore
+                
+                const validation = moduleDef.validate();
+                if (!validation.isValid) {
+                    log('error', `Definizione modulo non valida: ${validation.errors.join(', ')}`);
+                    updateStatus('error', 'Modulo Invalido');
+                    throw new Error(`Definizione modulo non valida: ${validation.errors.join(', ')}`);
+                }
+
+                // 2. Creazione istanza Entity temporanea per la generazione HTML
+                // L'entityName si ricava dal path del primo slot, es. "Cliente.nome" -> "Cliente"
+                const firstSlotPath = Object.keys(moduleDef.slots).length > 0 ? moduleDef.slots[Object.keys(moduleDef.slots)[0]].path : 'TestEntity.field';
+                const entityTypeForGeneration = firstSlotPath.split('.')[0] || 'TestEntity';
+                
+                const renderingEntity = new Entity(entityTypeForGeneration, `temp-render-${Date.now()}`);
+                Object.entries(testData).forEach(([key, value]) => {
+                    const slotDef = moduleDef.slots[key];
+                    if (slotDef) {
+                        renderingEntity.setAttribute(key, value, slotDef.type);
+                    } else {
+                        // Se lo slot non è definito nel modulo ma è nei testData, lo aggiungiamo comunque
+                        // assumendo 'text' o cercando di inferire. Per semplicità, usiamo 'text'.
+                        renderingEntity.setAttribute(key, value, 'text');
+                    }
+                });
+
+                // 3. Compilazione del modulo (HTML, CSS, JS)
+                const compiler = new ModuleCompiler(); // Usa window.eventBus e window.attributeSpace configurati da ensureCoreInitialized
+                
+                const htmlSnippet = compiler.generateHTML(moduleDef, renderingEntity);
+                const cssSnippet = compiler.generateCSS(moduleDef);
+                const jsLogicString = compiler.generateJavaScript(moduleDef);
+
+                const className = moduleDef.metadata.name.replace(/\\s+/g, '') + 'Module';
+
+                                 const rawTestPageContent = `
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Raw Modulo: ${documentTitle}</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f0f2f5; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+        }
+        #modulePlaceholder { 
+            background-color: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
+            width: 100%; 
+            max-width: 500px;
+            border: 1px solid #e1e5e9;
+        }
+        
+        /* Styling per il modulo */
+        .module-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+        
+        .category-label {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        
+        .entity-name {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.2;
+        }
+        
+        .module-body {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .field-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .field-input {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background-color: #fafafa;
+        }
+        
+        .field-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea.field-input {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+        
+        .field-input[type="number"] {
+            text-align: right;
+        }
+        
+        .field-input[type="date"] {
+            cursor: pointer;
+        }
+        
+        /* CSS generato dal modulo */
+        ${cssSnippet}
+    </style>
+</head>
+<body>
+    <div id="modulePlaceholder">${htmlSnippet}</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const moduleContainer = document.getElementById('modulePlaceholder').firstElementChild;
+            const entityData = ${JSON.stringify(testData)};
+            const entityName = "${entityTypeForGeneration}";
+
+            const mockEntity = {
+                id: 'raw-test-entity-' + Date.now(),
+                type: entityName,
+                attributes: { ...entityData },
+                getAttribute: function(key) {
+                    // console.log('[MockEntity] getAttribute:', key, 'Value:', this.attributes[key]);
+                    return this.attributes[key];
+                },
+                setAttribute: function(key, value, typeHint) {
+                    // console.log(\`[MockEntity] setAttribute: \${key} = \${value}\`);
+                    const oldValue = this.attributes[key];
+                    this.attributes[key] = value;
+                    
+                    // Simula aggiornamento UI per input/textarea se il valore è effettivamente cambiato
+                    // per evitare loop se il modulo JS stesso aggiorna il valore.
+                    const inputElement = moduleContainer.querySelector(\`[data-slot="\${key}"]\`);
+                    if (inputElement) {
+                        if (inputElement.tagName === 'INPUT' || inputElement.tagName === 'TEXTAREA') {
+                            if (inputElement.value !== value) inputElement.value = value;
+                        } else {
+                            // Per h3, p, span etc.
+                           // if (inputElement.textContent !== value) inputElement.textContent = value;
+                        }
+                    }
+                    // Notifica a un potenziale mockAttributeSpace (per binding di ritorno)
+                    if (window.attributeSpace && window.attributeSpace.mockInternalTrigger) {
+                        window.attributeSpace.mockInternalTrigger(this.id, key, value, oldValue);
+                    }
+                },
+                serialize: function() { return { ...this.attributes }; }
+            };
+
+            // Mock minimi per il sistema core se il JS del modulo li usa esplicitamente
+            const subscribers = {}; // Per il mock di attributeSpace
+            window.attributeSpace = {
+                subscribe: (entityId, attributeName, callback) => {
+                    // console.log(\`[MockAttributeSpace] subscribe: \${entityId}, \${attributeName}\`);
+                    const subKey = \`\${entityId}-\${attributeName}\`;
+                    if (!subscribers[subKey]) subscribers[subKey] = [];
+                    subscribers[subKey].push(callback);
+                },
+                unsubscribe: (entityId, attributeName, callback) => {
+                    // console.log(\`[MockAttributeSpace] unsubscribe: \${entityId}, \${attributeName}\`);
+                },
+                triggerChange: (entityId, attributeName, newValue, oldValue) => { // Chiamato da Entity.setAttribute
+                    // console.log(\`[MockAttributeSpace] triggerChange: \${entityId}.\${attributeName} -> \${newValue}\`);
+                    // Questo è se una *vera* Entity fosse usata. mockEntity chiama mockInternalTrigger.
+                },
+                mockInternalTrigger: (entityId, attributeName, newValue, oldValue) => { // Chiamato da mockEntity.setAttribute
+                    // console.log(\`[MockAttributeSpace] mockInternalTrigger: \${entityId}.\${attributeName} -> \${newValue}\`);
+                    const generalKey = \`\${entityId}-*\`;
+                    const specificKey = \`\${entityId}-\${attributeName}\`;
+                    
+                    if (subscribers[specificKey]) {
+                        subscribers[specificKey].forEach(cb => cb(newValue, oldValue, attributeName, entityId));
+                    }
+                    if (subscribers[generalKey]) {
+                        subscribers[generalKey].forEach(cb => cb(newValue, oldValue, attributeName, entityId));
+                    }
+                }
+            };
+            window.eventBus = {
+                publish: (eventName, data) => { /* console.log(\`[MockEventBus] publish: \${eventName}\`, data); */ },
+                subscribe: (eventName, callback) => { /* console.log(\`[MockEventBus] subscribe: \${eventName}\`); */ return { unsubscribe: () => {} }; },
+                unsubscribe: (subscription) => { /* console.log('[MockEventBus] unsubscribe'); */ }
+            };
+
+            try {
+                // console.log("Tentativo di istanziare la classe del modulo:", "${className}");
+                // console.log("JS Logic String:", \`\${jsLogicString.substring(0,100)}...\`);
+
+                const ModuleClassFactory = new Function('entity', 'container', jsLogicString + \`\\nreturn ${className};\`);
+                const moduleInstance = ModuleClassFactory(mockEntity, moduleContainer);
+                // console.log('Istanza modulo creata:', moduleInstance);
+
+                // Se il modulo ha un metodo 'postRender' o 'initializeBindings', potremmo chiamarlo
+                if (typeof moduleInstance.initializeBindings === 'function') {
+                    // moduleInstance.initializeBindings();
+                } else if (typeof moduleInstance.setupBindings === 'function') {
+                     // Questa è la funzione usata nell'esempio del context.md
+                    // moduleInstance.setupBindings(); // Già chiamata dal costruttore della classe JS generata
+                }
+                 log('success', \`Modulo "\${currentModule.metadata.name}" renderizzato raw.\`);
+            } catch (e) {
+                console.error("Errore nell'eseguire/istanziare il JS del modulo:", e);
+                log('error', \`Errore JS modulo: \${e.message}\`);
+            }
+        });
+
+        // Funzione di log per la pagina di test raw (opzionale, per debug)
+        function log(type, message) {
+            // console[type] ? console[type](message) : console.log(message);
+        }
+    <\/script>
+</body>
+</html>
+                `;
+
+                const newWindow = window.open('about:blank', '_blank');
+                if (newWindow) {
+                    newWindow.document.open();
+                    newWindow.document.write(rawTestPageContent);
+                    newWindow.document.close();
+
+                    testCount++;
+                    log('success', `Test raw del modulo "${documentTitle}" aperto in nuova scheda.`);
+                    updateStatus('success', 'Test Raw Avviato');
+                    updateCounters();
+                } else {
+                    throw new Error('Impossibile aprire nuova scheda (popup bloccato?)');
+                }
+
+            } catch (error) {
+                log('error', `Errore test raw: ${error.message}`);
+                updateStatus('error', 'Errore Test Raw');
+                console.error("Dettagli errore test raw:", error);
+            }
+        }
+
+        // Funzione per creare l'URL del documento test (per il viewer completo, non più usata da testModule)
+        function createTestDocumentUrl(moduleDefinition, testData, documentTitle) {
+            // Codifica i dati per l'URL
+            const encodedModule = encodeURIComponent(JSON.stringify(moduleDefinition));
+            const encodedData = encodeURIComponent(JSON.stringify(testData));
+            const encodedTitle = encodeURIComponent(documentTitle);
+            
+            // Crea l'URL con parametri
+            return `module-document-viewer.html?module=${encodedModule}&data=${encodedData}&title=${encodedTitle}`;
+        }
+
+        // Funzioni di utilità per logging e UI
+        function log(type, message) {
+            const logArea = document.getElementById('logArea');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
+            
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function updateStatus(type, message) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            statusDot.className = `status-dot ${type === 'success' ? '' : type}`;
+            statusText.textContent = message;
+        }
+
+        function updateCounters() {
+            document.getElementById('moduleCount').textContent = `${moduleCount} moduli generati`;
+            document.getElementById('testCount').textContent = `${testCount} test eseguiti`;
+        }
+
+        function clearLog() {
+            document.getElementById('logArea').innerHTML = '';
+            log('info', 'Log pulito');
+        }
+
+        // Event listeners
+        document.getElementById('moduleType').addEventListener('change', function() {
+            if (this.value !== 'custom') {
+                loadTemplate();
+            }
+        });
+
+        // Inizializzazione
+        let coreInitialized = false;
+        async function ensureCoreInitialized() {
+            if (coreInitialized) return true;
+
+            // Controlla se le classi base sono caricate
+            const requiredClasses = ['EventBus', 'Attribute', 'Entity', 'AttributeSpace', 'ModuleDefinition', 'ModuleCompiler'];
+            for (const className of requiredClasses) {
+                if (typeof window[className] !== 'function') {
+                    log('error', `Classe Core mancante: ${className}. Assicurati che gli script JS siano caricati.`);
+                    console.error(`Classe Core mancante: ${className}.js non caricato o non definisce la classe su window.`);
+                    return false;
+                }
+            }
+
+            try {
+                if (!window.eventBus) {
+                    window.eventBus = new EventBus();
+                }
+                if (!window.attributeSpace) {
+                    // AttributeSpace potrebbe richiedere StorageManager se fa operazioni di persistenza diretta,
+                    // ma per la sola compilazione non dovrebbe essere strettamente necessario.
+                    // Il costruttore di AttributeSpace prende solo eventBus.
+                    window.attributeSpace = new AttributeSpace(window.eventBus);
+                }
+                coreInitialized = true;
+                log('info', 'Core system (minimale) inizializzato per il generatore.');
+                return true;
+            } catch (e) {
+                log('error', `Errore inizializzazione core system minimale: ${e.message}`);
+                console.error("Errore in ensureCoreInitialized:", e);
+                coreInitialized = false; // Resetta così ci riprova
+                return false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('info', 'Sistema di test moduli inizializzato');
+            // Non è necessario `await ensureCoreInitialized()` qui subito, 
+            // lo facciamo on-demand prima di operazioni che lo richiedono (es. testModule).
+            loadTemplate(); // Carica il template di default
+        });
+    </script>
+</body>
+</html> 

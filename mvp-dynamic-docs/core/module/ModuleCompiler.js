@@ -39,11 +39,12 @@ class ModuleCompiler {
         console.log(`[ModuleCompiler] Compilazione modulo: ${moduleId}`);
 
         try {
-            // Estrai entità dalle opzioni se presente
+            // Estrai entità e istanza dalle opzioni se presenti
             const entity = compileOptions.entity || null;
+            const moduleInstance = compileOptions.moduleInstance || null;
             
             // Genera HTML template
-            const htmlTemplate = this.generateHTML(moduleDefinition, entity);
+            const htmlTemplate = this.generateHTML(moduleDefinition, entity, moduleInstance);
             
             // Genera CSS styles
             const cssStyles = this.generateCSS(moduleDefinition);
@@ -83,30 +84,37 @@ class ModuleCompiler {
      * Genera il template HTML per il modulo
      * @param {ModuleDefinition} moduleDefinition
      * @param {Entity} entity - Entità opzionale per popolare i dati
+     * @param {ModuleInstance} moduleInstance - Istanza del modulo per persistenza
      * @returns {string}
      */
-    generateHTML(moduleDefinition, entity = null) {
+    generateHTML(moduleDefinition, entity = null, moduleInstance = null) {
         const { moduleId, layout, slots } = moduleDefinition;
         
-        let html = `<div class="module-container" data-module-id="${moduleId}">`;
+        // Aggiungi ID istanza se presente
+        const instanceId = moduleInstance ? moduleInstance.instanceId : null;
+        let html = `<div class="module-container" data-module-id="${moduleId}"`;
+        if (instanceId) {
+            html += ` data-instance-id="${instanceId}"`;
+        }
+        html += '>';
         
         // Genera header se presente
         if (layout.header) {
-            html += this.generateLayoutSection('header', layout.header, slots, entity);
+            html += this.generateLayoutSection('header', layout.header, slots, entity, moduleInstance);
         }
         
         // Genera body principale
         if (layout.elements && layout.elements.length > 0) {
             html += '<div class="module-body">';
             for (const element of layout.elements) {
-                html += this.generateLayoutElement(element, slots, entity);
+                html += this.generateLayoutElement(element, slots, entity, moduleInstance);
             }
             html += '</div>';
         }
         
         // Genera footer se presente
         if (layout.footer) {
-            html += this.generateLayoutSection('footer', layout.footer, slots, entity);
+            html += this.generateLayoutSection('footer', layout.footer, slots, entity, moduleInstance);
         }
         
         html += '</div>';
@@ -120,14 +128,15 @@ class ModuleCompiler {
      * @param {object} sectionConfig
      * @param {Map} slots
      * @param {Entity} entity - Entità opzionale per popolare i dati
+     * @param {ModuleInstance} moduleInstance - Istanza del modulo per persistenza
      * @returns {string}
      */
-    generateLayoutSection(sectionType, sectionConfig, slots, entity = null) {
+    generateLayoutSection(sectionType, sectionConfig, slots, entity = null, moduleInstance = null) {
         let html = `<div class="module-${sectionType}">`;
         
         if (sectionConfig.elements) {
             for (const element of sectionConfig.elements) {
-                html += this.generateLayoutElement(element, slots, entity);
+                html += this.generateLayoutElement(element, slots, entity, moduleInstance);
             }
         }
         
@@ -140,10 +149,16 @@ class ModuleCompiler {
      * @param {object} element
      * @param {Map} slots
      * @param {Entity} entity - Entità opzionale per popolare i dati
+     * @param {ModuleInstance} moduleInstance - Istanza del modulo per persistenza
      * @returns {string}
      */
-    generateLayoutElement(element, slots, entity = null) {
+    generateLayoutElement(element, slots, entity = null, moduleInstance = null) {
         const { element: tagName, slot, attributes = {}, children = [] } = element;
+        
+        // Gestione speciale per entity-table (riconosciuto dall'attributo data-entity-table)
+        if (attributes['data-entity-table'] === 'true') {
+            return this.generateEntityTable(element, slots, entity, moduleInstance);
+        }
         
         let html = `<${tagName}`;
         
@@ -178,7 +193,7 @@ class ModuleCompiler {
         
         // Elementi figli
         for (const child of children) {
-            html += this.generateLayoutElement(child, slots, entity);
+            html += this.generateLayoutElement(child, slots, entity, moduleInstance);
         }
         
         // Chiudi tag se non è self-closing
@@ -186,6 +201,50 @@ class ModuleCompiler {
         if (!selfClosingTags.includes(tagName)) {
             html += `</${tagName}>`;
         }
+        
+        return html;
+    }
+
+    /**
+     * Genera una tabella dinamica per tutte le entità
+     * @param {object} element - Configurazione dell'elemento
+     * @param {Map} slots - Slot del modulo
+     * @param {Entity} entity - Entità (non usata per entity-table)
+     * @param {ModuleInstance} moduleInstance - Istanza del modulo per persistenza
+     * @returns {string}
+     */
+    generateEntityTable(element, slots, entity = null, moduleInstance = null) {
+        const { attributes = {}, class: className = '' } = element;
+        const isEditable = attributes.editable === true || attributes.editable === 'true';
+        
+        let html = `<div class="entity-table-container ${className}" data-entity-table="true"`;
+        
+        // Aggiungi ID istanza se presente
+        if (moduleInstance) {
+            html += ` data-instance-id="${moduleInstance.instanceId}"`;
+        }
+        
+        // Aggiungi attributi
+        for (const [attr, value] of Object.entries(attributes)) {
+            if (attr !== 'class') {
+                html += ` data-${attr}="${value}"`;
+            }
+        }
+        
+        html += '>\n';
+        
+        // Tabella semplice come Google Sheets
+        html += `  <table class="entity-table">\n`;
+        html += `    <thead>\n`;
+        html += `      <tr class="entity-table-header">\n`;
+        html += `        <!-- Header dinamico generato da JS -->\n`;
+        html += `      </tr>\n`;
+        html += `    </thead>\n`;
+        html += `    <tbody class="entity-table-body">\n`;
+        html += `      <!-- Righe dinamiche generate da JS -->\n`;
+        html += `    </tbody>\n`;
+        html += `  </table>\n`;
+        html += `</div>`;
         
         return html;
     }
@@ -374,7 +433,103 @@ class ModuleCompiler {
         css += '  margin-left: 4px;\n';
         css += '}\n\n';
         
+        // Stili per entity-table
+        css += this.generateEntityTableStyles(moduleId);
+        
         return css;
+    }
+
+    /**
+     * Genera stili specifici per entity-table
+     * @param {string} moduleId
+     * @returns {string}
+     */
+    generateEntityTableStyles(moduleId) {
+        return `
+/* Stili Entity Table semplici per ${moduleId} */
+[data-module-id="${moduleId}"] .entity-table-container,
+.${moduleId} .entity-table-container {
+  width: 100%;
+  background: white;
+  border: 1px solid #ddd;
+}
+
+[data-module-id="${moduleId}"] .entity-table,
+.${moduleId} .entity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}
+
+[data-module-id="${moduleId}"] .entity-table th,
+.${moduleId} .entity-table th {
+  background: #333;
+  color: white;
+  padding: 8px;
+  text-align: left;
+  font-weight: bold;
+  border: 1px solid #ddd;
+  position: relative;
+}
+
+[data-module-id="${moduleId}"] .entity-table td,
+.${moduleId} .entity-table td {
+  padding: 0;
+  border: 1px solid #ddd;
+  vertical-align: middle;
+}
+
+[data-module-id="${moduleId}"] .entity-table input,
+.${moduleId} .entity-table input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+[data-module-id="${moduleId}"] .entity-table input:focus,
+.${moduleId} .entity-table input:focus {
+  background: #f0f8ff;
+}
+
+[data-module-id="${moduleId}"] .add-btn,
+.${moduleId} .add-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #666;
+  padding: 4px 8px;
+}
+
+[data-module-id="${moduleId}"] .add-btn:hover,
+.${moduleId} .add-btn:hover {
+  color: #333;
+  background: #f0f0f0;
+}
+
+[data-module-id="${moduleId}"] .header-input,
+.${moduleId} .header-input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-weight: bold;
+  width: 100%;
+  padding: 4px;
+  outline: none;
+}
+
+[data-module-id="${moduleId}"] .header-input::placeholder,
+.${moduleId} .header-input::placeholder {
+  color: #ccc;
+}
+
+`;
     }
 
     /**
@@ -520,13 +675,29 @@ class ModuleCompiler {
         js += `      }\n`;
         js += `    }\n\n`;
         
-        // Load data
+        // Load data method
         js += `    loadData() {\n`;
+        js += `      // Controlla se c'è una entity-table da popolare\n`;
+        js += `      const entityTable = this.container.querySelector('[data-entity-table="true"]');\n`;
+        js += `      if (entityTable) {\n`;
+        js += `        this.setupEntityTable(entityTable);\n`;
+        js += `        return;\n`;
+        js += `      }\n\n`;
         js += `      // Carica dati iniziali per tutti gli slot dall'entità\n`;
-        js += `      if (!this.entity) return;\n\n`;
+        js += `      if (!this.entity) {\n`;
+        js += `        console.log('[Module] Nessuna entità collegata, caricamento dati di sistema');\n`;
+        js += `        return;\n`;
+        js += `      }\n\n`;
         js += `      for (const [slotName, slotConfig] of this.slots) {\n`;
         js += `        if (slotConfig.path) {\n`;
         js += `          const [entityType, attributeName] = slotConfig.path.split('.');\n`;
+        js += `          \n`;
+        js += `          // Gestione path di sistema\n`;
+        js += `          if (entityType === 'System') {\n`;
+        js += `            console.log('[Module] Caricamento dati di sistema per:', attributeName);\n`;
+        js += `            continue; // I dati di sistema sono gestiti dalla entity-table\n`;
+        js += `          }\n`;
+        js += `          \n`;
         js += `          if (this.entity.type === entityType) {\n`;
         js += `            const value = this.entity.getAttributeValue(attributeName);\n`;
         js += `            if (value !== null && value !== undefined) {\n`;
@@ -536,7 +707,231 @@ class ModuleCompiler {
         js += `          }\n`;
         js += `        }\n`;
         js += `      }\n`;
-        js += `    }\n`;
+        js += `    }\n\n`;
+        
+        // Setup entity table
+        js += `    setupEntityTable(tableContainer) {\n`;
+        js += `      console.log('[Module] Setup entity table con istanza');\n`;
+        js += `      this.tableContainer = tableContainer;\n`;
+        js += `      this.table = tableContainer.querySelector('.entity-table');\n`;
+        js += `      this.tableHeader = tableContainer.querySelector('.entity-table-header');\n`;
+        js += `      this.tableBody = tableContainer.querySelector('.entity-table-body');\n\n`;
+        js += `      // Verifica se la tabella esiste\n`;
+        js += `      if (!this.table || !this.tableHeader || !this.tableBody) {\n`;
+        js += `        console.error('[Module] Elementi tabella non trovati');\n`;
+        js += `        return;\n`;
+        js += `      }\n\n`;
+        js += `      // Ottieni ID istanza dal container\n`;
+        js += `      this.instanceId = tableContainer.dataset.instanceId;\n`;
+        js += `      console.log('[Module] ID istanza:', this.instanceId);\n\n`;
+        js += `      // Carica o crea istanza modulo\n`;
+        js += `      this.loadModuleInstance();\n\n`;
+        js += `      // Attributi base\n`;
+        js += `      this.attributes = ['Nome', 'Email', 'Telefono'];\n`;
+        js += `      this.entityType = 'Cliente';\n\n`;
+        js += `      // Inizializza tabella\n`;
+        js += `      this.buildTable();\n\n`;
+        js += `      // Ascolta eventi di entità\n`;
+        js += `      if (this.eventBus) {\n`;
+        js += `        this.eventBus.on('entity.created', () => {\n`;
+        js += `          console.log('[Module] Evento entity.created ricevuto');\n`;
+        js += `          this.buildTable();\n`;
+        js += `        });\n`;
+        js += `        this.eventBus.on('entity.updated', () => {\n`;
+        js += `          console.log('[Module] Evento entity.updated ricevuto');\n`;
+        js += `          this.buildTable();\n`;
+        js += `        });\n`;
+        js += `        this.eventBus.on('entity.deleted', () => {\n`;
+        js += `          console.log('[Module] Evento entity.deleted ricevuto');\n`;
+        js += `          this.buildTable();\n`;
+        js += `        });\n`;
+        js += `      }\n`;
+        js += `    }\n\n`;
+        
+        // Build table semplice
+        js += `    buildTable() {\n`;
+        js += `      console.log('[Module] buildTable chiamato');\n`;
+        js += `      \n`;
+        js += `      if (!this.tableHeader || !this.tableBody) {\n`;
+        js += `        console.error('[Module] Elementi tabella non disponibili');\n`;
+        js += `        return;\n`;
+        js += `      }\n\n`;
+        js += `      const entities = this.getLinkedEntities();\n`;
+        js += `      console.log('[Module] Build table, entità collegate trovate:', entities.length);\n\n`;
+        js += `      // Build header\n`;
+        js += `      this.tableHeader.innerHTML = '';\n`;
+        js += `      for (const attr of this.attributes) {\n`;
+        js += `        const th = document.createElement('th');\n`;
+        js += `        th.textContent = attr;\n`;
+        js += `        this.tableHeader.appendChild(th);\n`;
+        js += `      }\n`;
+        js += `      // Pulsante + per nuova colonna\n`;
+        js += `      const addColTh = document.createElement('th');\n`;
+        js += `      const addColBtn = document.createElement('button');\n`;
+        js += `      addColBtn.textContent = '+';\n`;
+        js += `      addColBtn.className = 'add-btn';\n`;
+        js += `      addColBtn.onclick = () => this.addColumn();\n`;
+        js += `      addColTh.appendChild(addColBtn);\n`;
+        js += `      this.tableHeader.appendChild(addColTh);\n\n`;
+        js += `      // Build body\n`;
+        js += `      this.tableBody.innerHTML = '';\n`;
+        js += `      \n`;
+        js += `      if (entities.length === 0) {\n`;
+        js += `        console.log('[Module] Nessuna entità trovata, mostra riga vuota');\n`;
+        js += `      } else {\n`;
+        js += `        console.log('[Module] Rendering', entities.length, 'entità');\n`;
+        js += `        for (const entity of entities) {\n`;
+        js += `          this.addRow(entity);\n`;
+        js += `        }\n`;
+        js += `      }\n`;
+        js += `      \n`;
+        js += `      // Riga + per nuova entità\n`;
+        js += `      this.addPlusRow();\n`;
+        js += `      \n`;
+        js += `      console.log('[Module] Tabella costruita con successo');\n`;
+        js += `    }\n\n`;
+        
+        js += `    addRow(entity) {\n`;
+        js += `      const row = document.createElement('tr');\n`;
+        js += `      for (const attr of this.attributes) {\n`;
+        js += `        const td = document.createElement('td');\n`;
+        js += `        const input = document.createElement('input');\n`;
+        js += `        const attribute = entity.getAttribute(attr.toLowerCase());\n`;
+        js += `        input.value = attribute ? attribute.value : '';\n`;
+        js += `        input.oninput = (e) => {\n`;
+        js += `          entity.setAttribute(attr.toLowerCase(), e.target.value, 'text');\n`;
+        js += `        };\n`;
+        js += `        td.appendChild(input);\n`;
+        js += `        row.appendChild(td);\n`;
+        js += `      }\n`;
+        js += `      // Cella vuota per allineamento\n`;
+        js += `      row.appendChild(document.createElement('td'));\n`;
+        js += `      this.tableBody.appendChild(row);\n`;
+        js += `    }\n\n`;
+        
+        js += `    addPlusRow() {\n`;
+        js += `      const row = document.createElement('tr');\n`;
+        js += `      for (let i = 0; i < this.attributes.length; i++) {\n`;
+        js += `        row.appendChild(document.createElement('td'));\n`;
+        js += `      }\n`;
+        js += `      // Pulsante + per nuova riga\n`;
+        js += `      const addRowTd = document.createElement('td');\n`;
+        js += `      const addRowBtn = document.createElement('button');\n`;
+        js += `      addRowBtn.textContent = '+';\n`;
+        js += `      addRowBtn.className = 'add-btn';\n`;
+        js += `      addRowBtn.onclick = () => this.addEntity();\n`;
+        js += `      addRowTd.appendChild(addRowBtn);\n`;
+        js += `      row.appendChild(addRowTd);\n`;
+        js += `      this.tableBody.appendChild(row);\n`;
+        js += `    }\n\n`;
+        
+        js += `    addColumn() {\n`;
+        js += `      const name = prompt('Nome attributo:');\n`;
+        js += `      if (name && !this.attributes.includes(name)) {\n`;
+        js += `        this.attributes.push(name);\n`;
+        js += `        this.buildTable();\n`;
+        js += `      }\n`;
+        js += `    }\n\n`;
+        
+        js += `    addEntity() {\n`;
+        js += `      console.log('[Module] addEntity chiamato');\n`;
+        js += `      \n`;
+        js += `      if (window.entityManager && this.moduleInstance) {\n`;
+        js += `        console.log('[Module] Creazione entità collegata all\\'istanza');\n`;
+        js += `        // Crea entità collegata all'istanza\n`;
+        js += `        this.moduleInstance.createLinkedEntity(this.entityType, {\n`;
+        js += `          nome: '',\n`;
+        js += `          email: '',\n`;
+        js += `          telefono: ''\n`;
+        js += `        }).then((entity) => {\n`;
+        js += `          console.log('[Module] Entità creata e collegata all\\'istanza:', entity.id);\n`;
+        js += `          console.log('[Module] Entità collegate totali:', this.moduleInstance.entityIds.size);\n`;
+        js += `          this.buildTable(); // Refresh immediato\n`;
+        js += `        }).catch(error => {\n`;
+        js += `          console.error('[Module] Errore creazione entità:', error);\n`;
+        js += `        });\n`;
+        js += `      } else if (window.entityManager) {\n`;
+        js += `        console.log('[Module] Fallback - creazione entità normale');\n`;
+        js += `        // Fallback: crea entità normale\n`;
+        js += `        window.entityManager.createEntity(this.entityType, null, {\n`;
+        js += `          nome: '',\n`;
+        js += `          email: '',\n`;
+        js += `          telefono: ''\n`;
+        js += `        }).then((entity) => {\n`;
+        js += `          console.log('[Module] Entità normale creata:', entity.id);\n`;
+        js += `          // Se abbiamo un'istanza, collegala anche se creata come fallback\n`;
+        js += `          if (this.moduleInstance) {\n`;
+        js += `            this.moduleInstance.addEntity(entity.id).then(() => {\n`;
+        js += `              console.log('[Module] Entità collegata all\\'istanza dopo creazione');\n`;
+        js += `            });\n`;
+        js += `          }\n`;
+        js += `          this.buildTable(); // Refresh immediato\n`;
+        js += `        }).catch(error => {\n`;
+        js += `          console.error('[Module] Errore creazione entità normale:', error);\n`;
+        js += `        });\n`;
+        js += `      } else {\n`;
+        js += `        console.error('[Module] EntityManager non disponibile');\n`;
+        js += `      }\n`;
+        js += `    }\n\n`;
+        
+        js += `    async loadModuleInstance() {\n`;
+        js += `      if (!this.instanceId || !window.ModuleInstance) {\n`;
+        js += `        console.log('[Module] Nessuna istanza da caricare');\n`;
+        js += `        return;\n`;
+        js += `      }\n\n`;
+        js += `      try {\n`;
+        js += `        // Prova a caricare istanza esistente\n`;
+        js += `        this.moduleInstance = await window.ModuleInstance.load(this.instanceId);\n`;
+        js += `        console.log('[Module] Istanza caricata:', this.instanceId);\n`;
+        js += `        console.log('[Module] Entità collegate all\\'istanza:', this.moduleInstance.entityIds.size);\n`;
+        js += `        \n`;
+        js += `        // Log delle entità collegate\n`;
+        js += `        if (this.moduleInstance.entityIds.size > 0) {\n`;
+        js += `          console.log('[Module] IDs entità collegate:', Array.from(this.moduleInstance.entityIds));\n`;
+        js += `        }\n`;
+        js += `      } catch (error) {\n`;
+        js += `        console.log('[Module] Istanza non trovata, creazione nuova');\n`;
+        js += `        // Crea nuova istanza\n`;
+        js += `        this.moduleInstance = new window.ModuleInstance('${moduleId}', this.instanceId);\n`;
+        js += `        await this.moduleInstance.save();\n`;
+        js += `        console.log('[Module] Nuova istanza creata:', this.instanceId);\n`;
+        js += `      }\n`;
+        js += `    }\n\n`;
+        
+        js += `    getLinkedEntities() {\n`;
+        js += `      console.log('[Module] getLinkedEntities chiamato');\n`;
+        js += `      \n`;
+        js += `      if (this.moduleInstance) {\n`;
+        js += `        console.log('[Module] IDs entità nell\\'istanza:', Array.from(this.moduleInstance.entityIds));\n`;
+        js += `        const linked = this.moduleInstance.getLinkedEntities();\n`;
+        js += `        console.log('[Module] Entità collegate trovate:', linked.length);\n`;
+        js += `        \n`;
+        js += `        // Debug: verifica che le entità esistano nell'EntityManager\n`;
+        js += `        if (linked.length === 0 && this.moduleInstance.entityIds.size > 0) {\n`;
+        js += `          console.warn('[Module] Entità collegate nell\\'istanza ma non trovate nell\\'EntityManager');\n`;
+        js += `          for (const entityId of this.moduleInstance.entityIds) {\n`;
+        js += `            const entity = window.entityManager ? window.entityManager.getEntity(entityId) : null;\n`;
+        js += `            console.log('[Module] Entità', entityId, ':', entity ? 'TROVATA' : 'NON TROVATA');\n`;
+        js += `          }\n`;
+        js += `        }\n`;
+        js += `        \n`;
+        js += `        return linked;\n`;
+        js += `      }\n`;
+        js += `      \n`;
+        js += `      // Fallback: tutte le entità del tipo\n`;
+        js += `      if (this.attributeSpace) {\n`;
+        js += `        const allEntities = this.attributeSpace.getEntitiesByType(this.entityType);\n`;
+        js += `        console.log('[Module] Fallback - entità del tipo', this.entityType, ':', allEntities.length);\n`;
+        js += `        return allEntities;\n`;
+        js += `      }\n`;
+        js += `      \n`;
+        js += `      console.log('[Module] Nessuna fonte di entità disponibile');\n`;
+        js += `      return [];\n`;
+        js += `    }\n\n`;
+        
+
+        
+
         
         js += `  }\n\n`;
         
@@ -707,10 +1102,17 @@ class CompiledModule {
      * Renderizza il modulo in un container DOM
      * @param {HTMLElement} container
      * @param {Entity} entity - Entità da collegare al modulo
+     * @param {ModuleInstance} moduleInstance - Istanza del modulo per persistenza
      */
-    render(container, entity = null) {
+    render(container, entity = null, moduleInstance = null) {
         // Inserisci HTML
         container.innerHTML = this.html;
+        
+        // Se c'è un'istanza, aggiungi l'ID al container
+        if (moduleInstance) {
+            container.setAttribute('data-instance-id', moduleInstance.instanceId);
+            console.log(`[CompiledModule] Rendering con istanza: ${moduleInstance.instanceId}`);
+        }
         
         // Inserisci CSS se non già presente
         if (!document.querySelector(`style[data-module="${this.moduleId}"]`)) {
@@ -722,10 +1124,16 @@ class CompiledModule {
         
         // Esegui JavaScript
         if (!window[`Module_${this.moduleId}_loaded`]) {
+            try {
             const scriptElement = document.createElement('script');
             scriptElement.textContent = this.js;
             document.head.appendChild(scriptElement);
             window[`Module_${this.moduleId}_loaded`] = true;
+            } catch (error) {
+                console.error(`[CompiledModule] Errore esecuzione JavaScript per ${this.moduleId}:`, error);
+                console.error('JavaScript generato:', this.js);
+                throw error;
+            }
         }
         
         // Inizializza il modulo con l'entità

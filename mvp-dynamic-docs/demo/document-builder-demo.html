@@ -158,6 +158,29 @@
             font-size: 12px;
             z-index: 1002;
         }
+        
+        .entity-manager-panel {
+            position: fixed;
+            top: 80px;
+            left: 16px;
+            width: 350px;
+            z-index: 1001;
+            max-height: calc(100vh - 100px);
+        }
+        
+        .toggle-entity-panel {
+            position: fixed;
+            top: 90px;
+            left: 376px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1002;
+        }
     </style>
 </head>
 <body>
@@ -167,6 +190,10 @@
     </div>
     
     <div id="documentBuilder" class="demo-container"></div>
+    
+    <!-- Entity Manager Panel -->
+    <button class="toggle-entity-panel" onclick="toggleEntityPanel()">Entità</button>
+    <div id="entityManagerPanel" class="entity-manager-panel"></div>
     
     <!-- Test Panel -->
     <button class="toggle-panel" onclick="toggleTestPanel()">Test</button>
@@ -200,6 +227,13 @@
                 <button class="test-button" onclick="testEntitySelector()">Apri Selettore</button>
                 <button class="test-button" onclick="testCreateEntity()">Crea Entità</button>
                 <button class="test-button" onclick="testEntityFilters()">Test Filtri</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Entity Manager</h4>
+                <button class="test-button" onclick="testEntityManager()">Test Entity Manager</button>
+                <button class="test-button" onclick="testEntityManagerReactivity()">Test Reattività</button>
+                <button class="test-button" onclick="testEntityManagerCRUD()">Test CRUD Attributi</button>
             </div>
             
             <div class="test-section">
@@ -241,6 +275,7 @@
     <!-- UI Components -->
     <script src="../ui/ModulePalette.js"></script>
     <script src="../ui/EntitySelector.js"></script>
+    <script src="../ui/EntityManager.js"></script>
     <script src="../ui/DocumentBuilder.js"></script>
 
     <script>
@@ -263,6 +298,7 @@
                 window.Document = Document;
                 window.ModulePalette = ModulePalette;
                 window.EntitySelector = EntitySelector;
+                window.EntityManager = EntityManager;
                 window.DocumentBuilder = DocumentBuilder;
                 window.Entity = Entity;
                 window.Attribute = Attribute;
@@ -294,6 +330,16 @@
                     logTest('✅ ModuleCompiler inizializzato', 'success');
                 } catch (e) {
                     logTest(`❌ Errore ModuleCompiler: ${e.message}`, 'error');
+                }
+                
+                // Initialize Entity Manager
+                try {
+                    const entityContainer = document.getElementById('entityManagerPanel');
+                    window.entityManager = new EntityManager(entityContainer, window.attributeSpace, window.eventBus);
+                    logTest('✅ EntityManager inizializzato', 'success');
+                } catch (e) {
+                    logTest(`❌ Errore EntityManager: ${e.message}`, 'error');
+                    console.error('EntityManager error:', e);
                 }
                 
                 // Initialize Document Builder
@@ -349,6 +395,7 @@
                 { name: 'EventBus', obj: window.eventBus },
                 { name: 'AttributeSpace', obj: window.attributeSpace },
                 { name: 'ModuleCompiler', obj: window.moduleCompiler },
+                { name: 'EntityManager', obj: window.entityManager },
                 { name: 'GridStackAdapter', obj: window.GridStackAdapter },
                 { name: 'Document', obj: window.Document },
                 { name: 'ModulePalette', obj: window.ModulePalette },
@@ -555,6 +602,9 @@
                 testEntity.setAttribute('email', 'mario.rossi@example.com', 'email');
                 testEntity.setAttribute('telefono', '+39 123 456 7890', 'tel');
                 
+                // Registra nel sistema AttributeSpace
+                window.attributeSpace.registerEntity(testEntity);
+                
                 // Salva nel storage
                 if (window.storageManager) {
                     await window.storageManager.save(`entity:${testEntity.id}`, testEntity.serialize());
@@ -703,12 +753,15 @@
             const tests = [
                 { name: 'Inizializzazione', fn: testInitialization },
                 { name: 'Componenti', fn: testComponentsLoaded },
+                { name: 'Entity Manager', fn: testEntityManager },
                 { name: 'Nuovo Documento', fn: testNewDocument },
                 { name: 'Module Palette', fn: testModulePalette },
                 { name: 'Ricerca Moduli', fn: testModuleSearch },
                 { name: 'Categorie', fn: testModuleCategories },
                 { name: 'Creazione Entità', fn: testCreateEntity },
                 { name: 'Filtri Entità', fn: testEntityFilters },
+                { name: 'Entity Manager Reattività', fn: testEntityManagerReactivity },
+                { name: 'Entity Manager CRUD', fn: testEntityManagerCRUD },
                 { name: 'Drag & Drop', fn: testDragDrop },
                 { name: 'Layout', fn: testLayoutPersistence }
             ];
@@ -786,6 +839,176 @@
             } else {
                 panel.style.display = 'none';
                 button.textContent = 'Test';
+            }
+        }
+        
+        function toggleEntityPanel() {
+            const panel = document.getElementById('entityManagerPanel');
+            const button = document.querySelector('.toggle-entity-panel');
+            
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                button.textContent = 'Nascondi';
+            } else {
+                panel.style.display = 'none';
+                button.textContent = 'Entità';
+            }
+        }
+        
+        // Test functions per Entity Manager
+        function testEntityManager() {
+            logTest('🔍 Test Entity Manager...', 'info');
+            
+            try {
+                if (!window.entityManager) {
+                    throw new Error('EntityManager non inizializzato');
+                }
+                
+                // Verifica che il pannello sia visibile
+                const panel = document.getElementById('entityManagerPanel');
+                if (panel.style.display === 'none') {
+                    toggleEntityPanel();
+                }
+                
+                // Verifica componenti UI
+                const manager = panel.querySelector('.entity-manager');
+                if (!manager) {
+                    throw new Error('UI EntityManager non trovata');
+                }
+                
+                const stats = manager.querySelector('.entity-stats');
+                const search = manager.querySelector('.entity-search');
+                const list = manager.querySelector('.entity-list');
+                
+                if (!stats || !search || !list) {
+                    throw new Error('Componenti UI mancanti');
+                }
+                
+                logTest('✅ EntityManager funzionante', 'success');
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Test EntityManager fallito: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testEntityManagerReactivity() {
+            logTest('🔍 Test reattività Entity Manager...', 'info');
+            
+            try {
+                if (!window.entityManager || !window.Entity) {
+                    throw new Error('Componenti non disponibili');
+                }
+                
+                // Crea entità di test
+                const testEntity = new Entity('test-reactivity-' + Date.now(), 'TestType');
+                
+                // Registra nel sistema AttributeSpace
+                window.attributeSpace.registerEntity(testEntity);
+                
+                // Emetti evento di creazione per compatibilità
+                window.eventBus.emit('entity.created', { entity: testEntity });
+                
+                // Verifica che appaia nell'Entity Manager
+                setTimeout(() => {
+                    const entityCard = document.querySelector(`[data-entity-id="${testEntity.id}"]`);
+                    if (entityCard) {
+                        logTest('✅ Entità apparsa in Entity Manager', 'success');
+                        
+                        // Test aggiornamento attributo
+                        testEntity.setAttribute('nome', 'Test Reattività', 'text');
+                        
+                        setTimeout(() => {
+                            const attributeInput = entityCard.querySelector('[data-attribute-name="nome"] .attribute-input');
+                            if (attributeInput && attributeInput.value === 'Test Reattività') {
+                                logTest('✅ Aggiornamento reattivo funzionante', 'success');
+                            } else {
+                                logTest('❌ Aggiornamento reattivo non funzionante', 'error');
+                            }
+                        }, 500);
+                        
+                    } else {
+                        logTest('❌ Entità non apparsa in Entity Manager', 'error');
+                    }
+                }, 500);
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Test reattività fallito: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testEntityManagerCRUD() {
+            logTest('🔍 Test CRUD attributi Entity Manager...', 'info');
+            
+            try {
+                if (!window.entityManager || !window.Entity) {
+                    throw new Error('Componenti non disponibili');
+                }
+                
+                // Crea entità di test
+                const testEntity = new Entity('test-crud-' + Date.now(), 'CRUDTest');
+                
+                // Registra nel sistema AttributeSpace
+                window.attributeSpace.registerEntity(testEntity);
+                
+                window.eventBus.emit('entity.created', { entity: testEntity });
+                
+                // Test creazione attributo
+                setTimeout(() => {
+                    const entityCard = document.querySelector(`[data-entity-id="${testEntity.id}"]`);
+                    if (!entityCard) {
+                        logTest(`❌ Entità non trovata per test CRUD: ${testEntity.id}`, 'error');
+                        logTest(`🔍 Entità disponibili: ${Array.from(document.querySelectorAll('[data-entity-id]')).map(el => el.getAttribute('data-entity-id')).join(', ')}`, 'info');
+                        return;
+                    }
+                    
+                    // Espandi la card
+                    const header = entityCard.querySelector('.entity-card-header');
+                    if (header) {
+                        header.click();
+                    }
+                    
+                    // Test aggiunta attributo programmatica
+                    testEntity.setAttribute('email', 'test@example.com', 'email');
+                    testEntity.setAttribute('età', 25, 'number');
+                    testEntity.setAttribute('attivo', true, 'boolean');
+                    
+                    setTimeout(() => {
+                        const emailInput = entityCard.querySelector('[data-attribute-name="email"] .attribute-input');
+                        const ageInput = entityCard.querySelector('[data-attribute-name="età"] .attribute-input');
+                        const activeInput = entityCard.querySelector('[data-attribute-name="attivo"] .attribute-input');
+                        
+                        if (emailInput && ageInput && activeInput) {
+                            logTest('✅ Attributi creati e visualizzati', 'success');
+                            
+                            // Test modifica valore
+                            emailInput.value = 'nuovo@example.com';
+                            emailInput.dispatchEvent(new Event('change'));
+                            
+                            setTimeout(() => {
+                                if (testEntity.getAttribute('email').value === 'nuovo@example.com') {
+                                    logTest('✅ Modifica attributo funzionante', 'success');
+                                } else {
+                                    logTest('❌ Modifica attributo non funzionante', 'error');
+                                }
+                            }, 200);
+                            
+                        } else {
+                            logTest('❌ Attributi non visualizzati correttamente', 'error');
+                        }
+                    }, 1000);
+                    
+                }, 1000);
+                
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Test CRUD fallito: ${error.message}`, 'error');
+                return false;
             }
         }
         

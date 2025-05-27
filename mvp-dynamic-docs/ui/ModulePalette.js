@@ -204,6 +204,17 @@ class ModulePalette {
                 slots: {
                     tasks: { path: 'Progetto.tasks', type: 'array', editable: true }
                 }
+            },
+            {
+                moduleId: 'entity-list',
+                title: 'Elenco Entità',
+                description: 'Tabella semplice con tutte le entità del sistema',
+                category: 'system',
+                icon: '🏢',
+                version: '1.0.0',
+                slots: {
+                    entities: { path: 'System.allEntities', type: 'array', editable: true }
+                }
             }
         ];
 
@@ -295,6 +306,7 @@ class ModulePalette {
             contact: 'Contatti',
             production: 'Produzione',
             productivity: 'Produttività',
+            system: 'Sistema',
             general: 'Generale'
         };
         

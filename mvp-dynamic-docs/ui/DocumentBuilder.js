@@ -285,6 +285,13 @@ class DocumentBuilder {
      * Seleziona un'entità per un modulo
      */
     selectEntityForModule(moduleDefinition, callback) {
+        // Gestione speciale per moduli di sistema che non richiedono entità
+        if (this.isSystemModule(moduleDefinition)) {
+            console.log(`[DocumentBuilder] Modulo di sistema ${moduleDefinition.moduleId}, nessuna entità richiesta`);
+            callback(null); // Passa null come entità
+            return;
+        }
+
         if (!this.entitySelector) {
             console.error('EntitySelector not available');
             return;
@@ -300,6 +307,28 @@ class DocumentBuilder {
     }
 
     /**
+     * Verifica se un modulo è un modulo di sistema che non richiede entità
+     */
+    isSystemModule(moduleDefinition) {
+        // Moduli che operano a livello di sistema
+        const systemModules = ['entity-list'];
+        
+        if (systemModules.includes(moduleDefinition.moduleId)) {
+            return true;
+        }
+        
+        // Verifica se tutti i path degli slot iniziano con "System"
+        if (moduleDefinition.slots) {
+            const allSystemPaths = Object.values(moduleDefinition.slots).every(slot => 
+                slot.path && slot.path.startsWith('System.')
+            );
+            return allSystemPaths;
+        }
+        
+        return false;
+    }
+
+    /**
      * Determina il tipo di entità richiesto da un modulo
      */
     getRequiredEntityType(moduleDefinition) {
@@ -309,7 +338,10 @@ class DocumentBuilder {
         for (const slot of Object.values(moduleDefinition.slots)) {
             if (slot.path && slot.path.includes('.')) {
                 const entityType = slot.path.split('.')[0];
-                return entityType;
+                // Ignora i path di sistema
+                if (entityType !== 'System') {
+                    return entityType;
+                }
             }
         }
 

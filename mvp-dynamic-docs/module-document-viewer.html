@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="documentTitle">Documento Dinamico - MVP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .document-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .document-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .document-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .document-header .subtitle {
+            opacity: 0.9;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .document-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .document-meta .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .document-content {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .module-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #e9ecef;
+        }
+
+        .module-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .module-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .module-description {
+            color: #6c757d;
+            font-size: 1em;
+        }
+
+        .module-body {
+            display: grid;
+            gap: 20px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-input,
+        .field-textarea {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .field-input:focus,
+        .field-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .field-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .field-input[readonly],
+        .field-textarea[readonly] {
+            background: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .field-required {
+            border-color: #ffc107;
+        }
+
+        .field-error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .field-success {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+
+        .document-footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-info {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-container {
+            text-align: center;
+            padding: 40px;
+            color: #dc3545;
+        }
+
+        .error-container h2 {
+            margin-bottom: 20px;
+        }
+
+        .error-container .error-details {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .document-container {
+                min-height: calc(100vh - 20px);
+            }
+            
+            .document-header {
+                padding: 20px;
+            }
+            
+            .document-header h1 {
+                font-size: 2em;
+            }
+            
+            .document-content {
+                padding: 20px;
+            }
+            
+            .module-container {
+                padding: 20px;
+            }
+            
+            .document-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .document-footer {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+
+        /* Animazioni */
+        .module-container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .field-group {
+            animation: fadeIn 0.4s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .field-group:nth-child(1) { animation-delay: 0.1s; }
+        .field-group:nth-child(2) { animation-delay: 0.2s; }
+        .field-group:nth-child(3) { animation-delay: 0.3s; }
+        .field-group:nth-child(4) { animation-delay: 0.4s; }
+        .field-group:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <button class="close-button" onclick="window.close()" title="Chiudi documento">×</button>
+            <h1 id="headerTitle">Documento Dinamico</h1>
+            <div class="subtitle" id="headerSubtitle">Caricamento in corso...</div>
+            <div class="document-meta">
+                <div class="meta-item">
+                    <span>📅</span>
+                    <span id="createdDate">-</span>
+                </div>
+                <div class="meta-item">
+                    <span>🔧</span>
+                    <span id="moduleInfo">-</span>
+                </div>
+                <div class="meta-item">
+                    <span>📊</span>
+                    <span id="entityInfo">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="document-content">
+            <div id="loadingContainer" class="loading-spinner">
+                <div class="spinner"></div>
+                <div>Caricamento modulo...</div>
+            </div>
+
+            <div id="errorContainer" class="error-container" style="display: none;">
+                <h2>❌ Errore Caricamento</h2>
+                <p>Si è verificato un errore durante il caricamento del documento.</p>
+                <div class="error-details" id="errorDetails"></div>
+                <button class="btn" onclick="window.close()">Chiudi</button>
+            </div>
+
+            <div id="moduleContainer" style="display: none;">
+                <!-- Il modulo verrà renderizzato qui -->
+            </div>
+        </div>
+
+        <div class="document-footer">
+            <div class="footer-info">
+                <span id="footerStatus">Pronto</span> | 
+                <span id="lastUpdate">Ultimo aggiornamento: mai</span>
+            </div>
+            <div class="footer-actions">
+                <button class="btn btn-secondary" onclick="exportData()">📤 Esporta</button>
+                <button class="btn btn-success" onclick="saveData()">💾 Salva</button>
+                <button class="btn" onclick="refreshModule()">🔄 Aggiorna</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core System Scripts -->
+    <script src="core/storage/StorageManager.js"></script>
+    <script src="core/entity/Attribute.js"></script>
+    <script src="core/entity/Entity.js"></script>
+    <script src="core/entity/AttributeSpace.js"></script>
+    <script src="core/reactive/EventBus.js"></script>
+    <script src="core/module/ModuleDefinition.js"></script>
+    <script src="core/module/ModuleCompiler.js"></script>
+
+    <script>
+        // Stato globale del documento
+        let currentModule = null;
+        let currentEntity = null;
+        let moduleDefinition = null;
+        let compiledModule = null;
+
+        // Inizializzazione sistema core
+        let storageManager, eventBus, attributeSpace;
+
+        // Funzione principale di inizializzazione
+        async function initializeDocument() {
+            try {
+                // Inizializza il sistema core
+                await initializeCoreSystem();
+                
+                // Estrai parametri dall'URL
+                const params = extractUrlParameters();
+                
+                if (!params.module || !params.data || !params.title) {
+                    throw new Error('Parametri URL mancanti (module, data, title)');
+                }
+
+                // Aggiorna il titolo del documento
+                updateDocumentTitle(params.title);
+                
+                // Parse dei dati
+                const moduleData = JSON.parse(decodeURIComponent(params.module));
+                const entityData = JSON.parse(decodeURIComponent(params.data));
+                
+                // Crea e renderizza il modulo
+                await createAndRenderModule(moduleData, entityData);
+                
+                // Nascondi loading e mostra il modulo
+                document.getElementById('loadingContainer').style.display = 'none';
+                document.getElementById('moduleContainer').style.display = 'block';
+                
+                updateFooterStatus('Documento caricato con successo');
+                
+            } catch (error) {
+                console.error('Errore inizializzazione documento:', error);
+                showError(error);
+            }
+        }
+
+        // Inizializza il sistema core
+        async function initializeCoreSystem() {
+            // Inizializza EventBus
+            eventBus = new EventBus();
+            window.eventBus = eventBus;
+            
+            // Inizializza StorageManager
+            storageManager = new StorageManager();
+            await storageManager.initialize();
+            window.storageManager = storageManager;
+            
+            // Inizializza AttributeSpace
+            attributeSpace = new AttributeSpace(eventBus);
+            window.attributeSpace = attributeSpace;
+            
+            console.log('Sistema core inizializzato');
+        }
+
+        // Estrae i parametri dall'URL
+        function extractUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+                module: urlParams.get('module'),
+                data: urlParams.get('data'),
+                title: urlParams.get('title')
+            };
+        }
+
+        // Aggiorna il titolo del documento
+        function updateDocumentTitle(title) {
+            document.title = title;
+            document.getElementById('documentTitle').textContent = title;
+            document.getElementById('headerTitle').textContent = title;
+            document.getElementById('headerSubtitle').textContent = 'Documento dinamico generato automaticamente';
+        }
+
+        // Crea e renderizza il modulo
+        async function createAndRenderModule(moduleData, entityData) {
+            try {
+                // Crea la definizione del modulo
+                moduleDefinition = new ModuleDefinition();
+                moduleDefinition.parse(moduleData);
+                
+                // Valida la definizione
+                const validation = moduleDefinition.validate();
+                if (!validation.isValid) {
+                    throw new Error(`Modulo non valido: ${validation.errors.join(', ')}`);
+                }
+
+                // Crea l'entità con i dati
+                const entityType = Object.keys(moduleDefinition.slots)[0]?.split('.')[0] || 'Entity';
+                currentEntity = new Entity(entityType, `${entityType}-${Date.now()}`);
+                
+                // Popola l'entità con i dati
+                Object.entries(entityData).forEach(([key, value]) => {
+                    const slot = moduleDefinition.slots[key];
+                    if (slot) {
+                        currentEntity.setAttribute(key, value, slot.type);
+                    }
+                });
+
+                // Compila il modulo
+                const compiler = new ModuleCompiler();
+                compiledModule = await compiler.compile(moduleDefinition, {
+                    entity: currentEntity
+                });
+
+                // Renderizza il modulo
+                const container = document.getElementById('moduleContainer');
+                await compiledModule.render(container, currentEntity);
+
+                // Aggiorna le informazioni del documento
+                updateDocumentMeta(moduleDefinition, currentEntity);
+                
+                // Setup event listeners per il salvataggio automatico
+                setupAutoSave();
+                
+                console.log('Modulo renderizzato con successo');
+
+            } catch (error) {
+                console.error('Errore creazione modulo:', error);
+                throw error;
+            }
+        }
+
+        // Aggiorna i metadati del documento
+        function updateDocumentMeta(moduleDefinition, entity) {
+            document.getElementById('createdDate').textContent = new Date().toLocaleDateString('it-IT');
+            document.getElementById('moduleInfo').textContent = `${moduleDefinition.metadata.name} v${moduleDefinition.version}`;
+            document.getElementById('entityInfo').textContent = `${entity.type} (${Object.keys(entity.attributes).length} attributi)`;
+        }
+
+        // Setup auto-save
+        function setupAutoSave() {
+            if (!currentEntity) return;
+
+            // Salva automaticamente ogni 30 secondi
+            setInterval(() => {
+                saveData(true); // true = silent save
+            }, 30000);
+
+            // Salva quando l'utente modifica i dati
+            attributeSpace.subscribe(currentEntity.id, '*', () => {
+                updateLastUpdateTime();
+                // Salva dopo 2 secondi di inattività
+                clearTimeout(window.autoSaveTimeout);
+                window.autoSaveTimeout = setTimeout(() => {
+                    saveData(true);
+                }, 2000);
+            });
+        }
+
+        // Aggiorna il timestamp dell'ultimo aggiornamento
+        function updateLastUpdateTime() {
+            document.getElementById('lastUpdate').textContent = 
+                `Ultimo aggiornamento: ${new Date().toLocaleTimeString('it-IT')}`;
+        }
+
+        // Salva i dati
+        function saveData(silent = false) {
+            if (!currentEntity || !moduleDefinition) {
+                if (!silent) alert('Nessun dato da salvare');
+                return;
+            }
+
+            try {
+                const saveData = {
+                    entity: currentEntity.serialize(),
+                    module: moduleDefinition.serialize(),
+                    timestamp: new Date().toISOString(),
+                    title: document.title
+                };
+
+                // Salva nel localStorage
+                const saveKey = `document_${moduleDefinition.moduleId}_${currentEntity.id}`;
+                localStorage.setItem(saveKey, JSON.stringify(saveData));
+
+                if (!silent) {
+                    updateFooterStatus('Dati salvati con successo');
+                    setTimeout(() => updateFooterStatus('Pronto'), 3000);
+                }
+
+                updateLastUpdateTime();
+
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                if (!silent) alert('Errore durante il salvataggio');
+            }
+        }
+
+        // Esporta i dati
+        function exportData() {
+            if (!currentEntity || !moduleDefinition) {
+                alert('Nessun dato da esportare');
+                return;
+            }
+
+            try {
+                const exportData = {
+                    document: {
+                        title: document.title,
+                        created: new Date().toISOString(),
+                        module: moduleDefinition.serialize(),
+                        entity: currentEntity.serialize()
+                    }
+                };
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `documento_${moduleDefinition.moduleId}_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+
+                updateFooterStatus('Dati esportati con successo');
+                setTimeout(() => updateFooterStatus('Pronto'), 3000);
+
+            } catch (error) {
+                console.error('Errore esportazione:', error);
+                alert('Errore durante l\'esportazione');
+            }
+        }
+
+        // Aggiorna il modulo
+        function refreshModule() {
+            if (!moduleDefinition || !currentEntity) {
+                alert('Nessun modulo da aggiornare');
+                return;
+            }
+
+            try {
+                // Ricompila e ri-renderizza il modulo
+                const container = document.getElementById('moduleContainer');
+                container.innerHTML = '';
+                
+                createAndRenderModule(moduleDefinition.serialize(), currentEntity.serialize())
+                    .then(() => {
+                        updateFooterStatus('Modulo aggiornato');
+                        setTimeout(() => updateFooterStatus('Pronto'), 3000);
+                    })
+                    .catch(error => {
+                        console.error('Errore aggiornamento:', error);
+                        alert('Errore durante l\'aggiornamento');
+                    });
+
+            } catch (error) {
+                console.error('Errore refresh:', error);
+                alert('Errore durante l\'aggiornamento');
+            }
+        }
+
+        // Mostra errore
+        function showError(error) {
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('moduleContainer').style.display = 'none';
+            document.getElementById('errorContainer').style.display = 'block';
+            document.getElementById('errorDetails').textContent = error.message + '\n\n' + error.stack;
+            
+            updateFooterStatus('Errore caricamento');
+        }
+
+        // Aggiorna lo status nel footer
+        function updateFooterStatus(status) {
+            document.getElementById('footerStatus').textContent = status;
+        }
+
+        // Gestione eventi tastiera
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+S per salvare
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveData();
+            }
+            
+            // Ctrl+R per aggiornare
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                refreshModule();
+            }
+            
+            // Escape per chiudere
+            if (e.key === 'Escape') {
+                window.close();
+            }
+        });
+
+        // Gestione chiusura finestra
+        window.addEventListener('beforeunload', function(e) {
+            // Salva automaticamente prima di chiudere
+            saveData(true);
+        });
+
+        // Inizializzazione al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', initializeDocument);
+    </script>
+</body>
+</html> 

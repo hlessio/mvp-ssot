@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Builder Demo - MVP Dynamic Docs</title>
+    
+    <!-- GridStack CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../styles/gridstack.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .demo-header {
+            background: #fff;
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .demo-title {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .demo-subtitle {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .demo-container {
+            height: calc(100vh - 80px);
+            padding: 16px;
+        }
+        
+        .grid-stack {
+            background: transparent;
+        }
+        
+        .grid-stack-item-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .test-panel {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            width: 300px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1001;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        
+        .test-panel-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .test-panel-content {
+            padding: 16px;
+        }
+        
+        .test-section {
+            margin-bottom: 20px;
+        }
+        
+        .test-section h4 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .test-button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .test-button:hover {
+            background: #0056b3;
+        }
+        
+        .test-button.secondary {
+            background: #6c757d;
+        }
+        
+        .test-button.secondary:hover {
+            background: #545b62;
+        }
+        
+        .test-button.success {
+            background: #28a745;
+        }
+        
+        .test-button.success:hover {
+            background: #1e7e34;
+        }
+        
+        .test-results {
+            margin-top: 12px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .test-log {
+            margin: 2px 0;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        .test-log.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .test-log.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .test-log.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .toggle-panel {
+            position: fixed;
+            top: 90px;
+            right: 326px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px 0 0 4px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1002;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1 class="demo-title">Simple Builder Demo</h1>
+        <p class="demo-subtitle">Demo semplificata con modulo Entity List in GridStack</p>
+    </div>
+    
+    <div class="demo-container">
+        <div class="grid-stack"></div>
+    </div>
+    
+    <!-- Test Panel -->
+    <button class="toggle-panel" onclick="toggleTestPanel()">Test</button>
+    <div id="testPanel" class="test-panel">
+        <div class="test-panel-header">
+            🧪 Test Panel
+        </div>
+        <div class="test-panel-content">
+            <div class="test-section">
+                <h4>Inizializzazione</h4>
+                <button class="test-button" onclick="testInitialization()">Test Inizializzazione</button>
+                <button class="test-button" onclick="testComponentsLoaded()">Test Componenti</button>
+                <button class="test-button success" onclick="debugModuleInstance()">🔧 Debug ModuleInstance</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Entità (SSOT)</h4>
+                <button class="test-button" onclick="createTestEntity()">Crea Entità Test</button>
+                <button class="test-button" onclick="addAttributeToEntity()">Aggiungi Attributo</button>
+                <button class="test-button" onclick="listAllEntities()">Lista Entità</button>
+                <button class="test-button" onclick="testPersistence()">Test Persistenza</button>
+                <button class="test-button success" onclick="testInputPersistence()">Test Input Auto-Save</button>
+                <button class="test-button secondary" onclick="clearAllEntities()">Pulisci Tutto</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Modulo</h4>
+                <button class="test-button" onclick="refreshEntityModule()">Refresh Modulo</button>
+                <button class="test-button" onclick="testModuleReactivity()">Test Reattività</button>
+                <button class="test-button success" onclick="testAddRowPersistence()">Test Pulsante + Riga</button>
+                <button class="test-button" onclick="listAvailableModules()">Lista Moduli</button>
+                <button class="test-button" onclick="loadDifferentModule()">Carica Altro Modulo</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Istanze (SSOT)</h4>
+                <button class="test-button" onclick="testModuleInstance()">Test Istanza Modulo</button>
+                <button class="test-button" onclick="listModuleInstances()">Lista Istanze</button>
+                <button class="test-button" onclick="testInstancePersistence()">Test Persistenza Istanza</button>
+                <button class="test-button secondary" onclick="clearModuleInstances()">Pulisci Istanze</button>
+            </div>
+            
+            <div class="test-section">
+                <h4>Risultati</h4>
+                <div id="testResults" class="test-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GridStack JS -->
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack-all.js"></script>
+    
+    <!-- Core System -->
+    <script src="../core/storage/StorageManager.js"></script>
+    <script src="../core/reactive/EventBus.js"></script>
+    <script src="../core/storage/MigrationInterface.js"></script>
+    <script src="../core/entity/Attribute.js"></script>
+    <script src="../core/entity/Entity.js"></script>
+    <script src="../core/entity/AttributeSpace.js"></script>
+    <script src="../core/module/ModuleDefinition.js"></script>
+    <script src="../core/module/ModuleCompiler.js"></script>
+    <script src="../core/module/ModuleLoader.js"></script>
+    <script src="../core/module/ModuleInstance.js"></script>
+    <script src="../core/entity/EntityManager.js"></script>
+
+    <script>
+        // Variabili globali
+        let grid = null;
+        let entityListModule = null;
+        let moduleLoader = null;
+        let entityManager = null;
+        
+        // Logging
+        function logTest(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            if (results) {
+                const log = document.createElement('div');
+                log.className = `test-log ${type}`;
+                log.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                results.appendChild(log);
+                results.scrollTop = results.scrollHeight;
+            }
+            console.log(`[Test] ${message}`);
+        }
+        
+        // Toggle test panel
+        function toggleTestPanel() {
+            const panel = document.getElementById('testPanel');
+            const button = document.querySelector('.toggle-panel');
+            
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                button.textContent = 'Test';
+            } else {
+                panel.style.display = 'none';
+                button.textContent = 'Test';
+            }
+        }
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', async function() {
+            logTest('🚀 Inizializzazione demo...', 'info');
+            
+            try {
+                // Initialize core services
+                window.storageManager = new StorageManager();
+                window.eventBus = new EventBus();
+                window.attributeSpace = new AttributeSpace();
+                window.moduleCompiler = new ModuleCompiler();
+                
+                // Initialize module loader con percorso corretto
+                moduleLoader = new ModuleLoader('../modules/');
+                window.moduleLoader = moduleLoader;
+                await moduleLoader.initialize();
+                
+                // Initialize entity manager per SSOT
+                entityManager = new EntityManager();
+                window.entityManager = entityManager;
+                await entityManager.initialize();
+                
+                logTest('✅ Core services inizializzati', 'success');
+                
+                // Initialize GridStack
+                grid = GridStack.init({
+                    cellHeight: 70,
+                    verticalMargin: 10,
+                    horizontalMargin: 10,
+                    minRow: 8,
+                    animate: true,
+                    float: false,
+                    resizable: {
+                        handles: 'e, se, s, sw, w'
+                    }
+                });
+                
+                logTest('✅ GridStack inizializzato', 'success');
+                
+                // Carica il modulo entity-list
+                await loadEntityListModule();
+                
+                logTest('✅ Demo inizializzata con successo', 'success');
+                
+            } catch (error) {
+                logTest(`❌ Errore inizializzazione: ${error.message}`, 'error');
+                console.error('Demo initialization failed:', error);
+            }
+        });
+        
+        // Carica il modulo entity-list dinamicamente
+        async function loadEntityListModule() {
+            try {
+                logTest('🔄 Caricamento modulo entity-list dal file...', 'info');
+                
+                // Crea o carica istanza persistente del modulo
+                let moduleInstance;
+                const savedInstanceId = localStorage.getItem('demo_entity_list_instance');
+                
+                if (savedInstanceId) {
+                    try {
+                        moduleInstance = await window.ModuleInstance.load(savedInstanceId);
+                        logTest(`✅ Istanza esistente caricata: ${savedInstanceId}`, 'success');
+                    } catch (error) {
+                        logTest('⚠️ Istanza salvata non trovata, creazione nuova', 'info');
+                        moduleInstance = new window.ModuleInstance('entity-list');
+                        await moduleInstance.save();
+                        localStorage.setItem('demo_entity_list_instance', moduleInstance.instanceId);
+                    }
+                } else {
+                    moduleInstance = new window.ModuleInstance('entity-list');
+                    await moduleInstance.save();
+                    localStorage.setItem('demo_entity_list_instance', moduleInstance.instanceId);
+                    logTest(`✅ Nuova istanza creata: ${moduleInstance.instanceId}`, 'success');
+                }
+                
+                // Carica il modulo usando ModuleLoader con istanza
+                const compiledModule = await moduleLoader.loadModule('entity-list', {
+                    moduleInstance: moduleInstance
+                });
+                
+                // Aggiungi alla griglia
+                const widget = grid.addWidget({
+                    w: 12,
+                    h: 6,
+                    x: 0,
+                    y: 0,
+                    content: '<div class="module-placeholder">Caricamento modulo...</div>'
+                });
+                
+                // Renderizza il modulo nel widget con istanza
+                const container = widget.querySelector('.grid-stack-item-content');
+                compiledModule.render(container, null, moduleInstance);
+                
+                entityListModule = compiledModule;
+                
+                logTest('✅ Modulo Entity List caricato con istanza persistente', 'success');
+                logTest(`🔗 URL istanza: ${moduleInstance.getUrl()}`, 'info');
+                
+                // Log informazioni modulo
+                const moduleInfo = moduleLoader.getModuleInfo('entity-list');
+                if (moduleInfo) {
+                    logTest(`📋 Modulo: ${moduleInfo.name} v${moduleInfo.version}`, 'info');
+                    logTest(`📂 Categoria: ${moduleInfo.category}`, 'info');
+                }
+                
+            } catch (error) {
+                logTest(`❌ Errore caricamento modulo: ${error.message}`, 'error');
+                console.error('Failed to load entity list module:', error);
+            }
+        }
+        
+        // Test Functions
+        function testInitialization() {
+            logTest('🔍 Test inizializzazione...', 'info');
+            
+            try {
+                if (!grid) {
+                    throw new Error('GridStack non inizializzato');
+                }
+                
+                if (!window.attributeSpace) {
+                    throw new Error('AttributeSpace non inizializzato');
+                }
+                
+                if (!entityListModule) {
+                    throw new Error('Entity List Module non caricato');
+                }
+                
+                logTest('✅ Inizializzazione completata correttamente', 'success');
+                return true;
+                
+            } catch (error) {
+                logTest(`❌ Test inizializzazione fallito: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testComponentsLoaded() {
+            logTest('🔍 Verifica componenti caricati...', 'info');
+            
+            const components = [
+                { name: 'StorageManager', obj: window.storageManager },
+                { name: 'EventBus', obj: window.eventBus },
+                { name: 'AttributeSpace', obj: window.attributeSpace },
+                { name: 'ModuleCompiler', obj: window.moduleCompiler },
+                { name: 'GridStack', obj: window.GridStack },
+                { name: 'Grid Instance', obj: grid },
+                { name: 'Entity List Module', obj: entityListModule }
+            ];
+            
+            let allLoaded = true;
+            
+            components.forEach(comp => {
+                if (comp.obj) {
+                    logTest(`✅ ${comp.name} caricato`, 'success');
+                } else {
+                    logTest(`❌ ${comp.name} NON caricato`, 'error');
+                    allLoaded = false;
+                }
+            });
+            
+            if (allLoaded) {
+                logTest('✅ Tutti i componenti sono caricati', 'success');
+            } else {
+                logTest('❌ Alcuni componenti mancano', 'error');
+            }
+            
+            return allLoaded;
+        }
+        
+        async function createTestEntity() {
+            logTest('🔍 Creazione entità di test...', 'info');
+            
+            try {
+                if (!entityManager) {
+                    throw new Error('EntityManager non inizializzato');
+                }
+                
+                // Crea entità con EntityManager (auto-persistenza)
+                const entity = await entityManager.createEntity('Cliente', null, {
+                    nome: 'Mario Rossi',
+                    email: 'mario@example.com',
+                    telefono: '+39 123 456 7890'
+                });
+                
+                logTest(`✅ Entità creata e salvata: ${entity.id}`, 'success');
+                logTest(`📋 Attributi: nome, email, telefono`, 'info');
+                logTest(`💾 Entità persistita automaticamente`, 'info');
+                
+                return entity;
+                
+            } catch (error) {
+                logTest(`❌ Errore creazione entità: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        function addAttributeToEntity() {
+            logTest('🔍 Aggiunta attributo a entità esistente...', 'info');
+            
+            try {
+                if (!entityManager) {
+                    throw new Error('EntityManager non inizializzato');
+                }
+                
+                const entities = entityManager.getAllEntities();
+                if (entities.size === 0) {
+                    logTest('⚠️ Nessuna entità trovata, creane una prima', 'error');
+                    return;
+                }
+                
+                // Prendi la prima entità
+                const entity = entities.values().next().value;
+                const newAttrName = `attr_${Date.now()}`;
+                const newAttrValue = `Valore ${Math.floor(Math.random() * 100)}`;
+                
+                // Modifica tramite entità (auto-save attivo)
+                entity.setAttribute(newAttrName, newAttrValue, 'text');
+                
+                logTest(`✅ Attributo aggiunto: ${newAttrName} = ${newAttrValue}`, 'success');
+                logTest(`📋 Entità: ${entity.id}`, 'info');
+                logTest(`💾 Modifica salvata automaticamente`, 'info');
+                
+            } catch (error) {
+                logTest(`❌ Errore aggiunta attributo: ${error.message}`, 'error');
+            }
+        }
+        
+        function listAllEntities() {
+            logTest('🔍 Lista di tutte le entità...', 'info');
+            
+            try {
+                if (!entityManager) {
+                    throw new Error('EntityManager non inizializzato');
+                }
+                
+                const entities = entityManager.getAllEntities();
+                
+                if (entities.size === 0) {
+                    logTest('📋 Nessuna entità presente nel sistema', 'info');
+                    return;
+                }
+                
+                logTest(`📋 Trovate ${entities.size} entità persistenti:`, 'info');
+                
+                entities.forEach((entity, id) => {
+                    const attrCount = entity.attributes instanceof Map ? 
+                        entity.attributes.size : 
+                        Object.keys(entity.attributes || {}).length;
+                    
+                    logTest(`  • ${id} (${entity.type}) - ${attrCount} attributi`, 'info');
+                });
+                
+                // Mostra statistiche EntityManager
+                const stats = entityManager.getStats();
+                logTest(`📊 Statistiche: ${stats.totalEntities} entità, ${stats.pendingSaves} salvataggi in corso`, 'info');
+                
+            } catch (error) {
+                logTest(`❌ Errore lista entità: ${error.message}`, 'error');
+            }
+        }
+        
+        function refreshEntityModule() {
+            logTest('🔍 Refresh modulo entità...', 'info');
+            
+            try {
+                if (!entityListModule) {
+                    throw new Error('Modulo non caricato');
+                }
+                
+                // Trova il container del modulo e forza il refresh
+                const moduleContainer = document.querySelector('[data-module-id="entity-list"]');
+                if (moduleContainer && moduleContainer._moduleInstance) {
+                    if (moduleContainer._moduleInstance.refreshEntityTable) {
+                        moduleContainer._moduleInstance.refreshEntityTable();
+                        logTest('✅ Modulo refreshato', 'success');
+                    } else {
+                        logTest('⚠️ Metodo refresh non trovato', 'error');
+                    }
+                } else {
+                    logTest('⚠️ Istanza modulo non trovata', 'error');
+                }
+                
+            } catch (error) {
+                logTest(`❌ Errore refresh modulo: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testModuleReactivity() {
+            logTest('🔍 Test reattività modulo...', 'info');
+            
+            try {
+                // Crea una nuova entità
+                const entity = await createTestEntity();
+                if (!entity) return;
+                
+                // Aspetta un momento per il refresh automatico
+                setTimeout(() => {
+                    logTest('✅ Test reattività completato', 'success');
+                    logTest('📋 Controlla se la nuova entità appare nella tabella', 'info');
+                }, 500);
+                
+            } catch (error) {
+                logTest(`❌ Errore test reattività: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAddRowPersistence() {
+            logTest('🔍 Test persistenza pulsante + riga...', 'info');
+            
+            try {
+                // Conta entità prima
+                const entitiesBefore = entityManager.getAllEntities();
+                const countBefore = entitiesBefore.size;
+                logTest(`📊 Entità prima: ${countBefore}`, 'info');
+                
+                // Trova il pulsante + per aggiungere riga nella tabella
+                const addRowBtn = document.querySelector('.add-btn');
+                if (!addRowBtn) {
+                    throw new Error('Pulsante + per aggiungere riga non trovato');
+                }
+                
+                logTest('🖱️ Simulazione click su pulsante + riga...', 'info');
+                
+                // Simula il click
+                addRowBtn.click();
+                
+                // Aspetta che l'entità venga creata
+                setTimeout(async () => {
+                    const entitiesAfter = entityManager.getAllEntities();
+                    const countAfter = entitiesAfter.size;
+                    
+                    logTest(`📊 Entità dopo: ${countAfter}`, 'info');
+                    
+                    if (countAfter > countBefore) {
+                        logTest('✅ Nuova entità creata con successo!', 'success');
+                        
+                        // Trova l'entità più recente
+                        const newEntities = Array.from(entitiesAfter.values())
+                            .filter(entity => !entitiesBefore.has(entity.id));
+                        
+                        if (newEntities.length > 0) {
+                            const newEntity = newEntities[0];
+                            logTest(`🆔 ID nuova entità: ${newEntity.id}`, 'info');
+                            logTest(`📋 Tipo: ${newEntity.type}`, 'info');
+                            
+                            // Verifica persistenza
+                            setTimeout(async () => {
+                                logTest('🔄 Verifica persistenza in LocalStorage...', 'info');
+                                
+                                const persistedEntity = entityManager.getEntity(newEntity.id);
+                                if (persistedEntity) {
+                                    logTest('✅ Entità persistita correttamente!', 'success');
+                                    logTest('💾 L\'entità sarà disponibile anche dopo il refresh', 'info');
+                                } else {
+                                    logTest('❌ Entità non trovata in persistenza', 'error');
+                                }
+                            }, 1000);
+                        }
+                    } else {
+                        logTest('❌ Nessuna nuova entità creata', 'error');
+                        logTest('💡 Prova a cliccare manualmente il pulsante + nella tabella', 'info');
+                    }
+                }, 500);
+                
+            } catch (error) {
+                logTest(`❌ Errore test pulsante +: ${error.message}`, 'error');
+                logTest('💡 Assicurati che la tabella sia visibile e il modulo caricato', 'info');
+            }
+        }
+        
+        async function testPersistence() {
+            logTest('🔍 Test persistenza entità...', 'info');
+            
+            try {
+                if (!entityManager) {
+                    throw new Error('EntityManager non inizializzato');
+                }
+                
+                // Crea entità di test
+                const entity = await entityManager.createEntity('TestPersistence', null, {
+                    testField: 'Valore iniziale',
+                    timestamp: new Date().toISOString()
+                });
+                
+                logTest(`✅ Entità creata: ${entity.id}`, 'success');
+                
+                // Modifica un attributo
+                entity.setAttribute('testField', 'Valore modificato', 'text');
+                logTest('🔄 Attributo modificato, attesa auto-save...', 'info');
+                
+                // Aspetta il debounce dell'auto-save
+                setTimeout(async () => {
+                    // Verifica che sia salvata
+                    const stats = entityManager.getStats();
+                    logTest(`💾 Salvataggi in corso: ${stats.pendingSaves}`, 'info');
+                    
+                    // Simula ricaricamento: verifica persistenza
+                    logTest('🔄 Verifica persistenza...', 'info');
+                    
+                    setTimeout(async () => {
+                        const reloadedEntity = entityManager.getEntity(entity.id);
+                        if (reloadedEntity) {
+                            const testValue = reloadedEntity.getAttributeValue('testField');
+                            if (testValue === 'Valore modificato') {
+                                logTest('✅ Persistenza verificata: dati mantenuti', 'success');
+                            } else {
+                                logTest(`❌ Persistenza fallita: valore = ${testValue}`, 'error');
+                            }
+                        } else {
+                            logTest('❌ Entità non trovata', 'error');
+                        }
+                    }, 500);
+                }, 1500);
+                
+            } catch (error) {
+                logTest(`❌ Errore test persistenza: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testInputPersistence() {
+            logTest('🔍 Test auto-save input tabella...', 'info');
+            
+            try {
+                // Prima crea una nuova entità cliccando il pulsante +
+                const entitiesBefore = entityManager.getAllEntities();
+                const countBefore = entitiesBefore.size;
+                
+                const addRowBtn = document.querySelector('.add-btn');
+                if (!addRowBtn) {
+                    throw new Error('Pulsante + non trovato');
+                }
+                
+                logTest('🖱️ Creazione nuova entità...', 'info');
+                addRowBtn.click();
+                
+                // Aspetta che l'entità venga creata
+                setTimeout(async () => {
+                    const entitiesAfter = entityManager.getAllEntities();
+                    const countAfter = entitiesAfter.size;
+                    
+                    if (countAfter <= countBefore) {
+                        logTest('❌ Nessuna nuova entità creata', 'error');
+                        return;
+                    }
+                    
+                    logTest('✅ Nuova entità creata', 'success');
+                    
+                    // Trova gli input nella tabella
+                    const inputs = document.querySelectorAll('.entity-table input');
+                    if (inputs.length === 0) {
+                        logTest('❌ Nessun input trovato nella tabella', 'error');
+                        return;
+                    }
+                    
+                    logTest(`📝 Trovati ${inputs.length} input nella tabella`, 'info');
+                    
+                    // Trova il primo input vuoto (dell'ultima riga)
+                    const lastRowInputs = Array.from(inputs).slice(-3); // Ultimi 3 input (Nome, Email, Telefono)
+                    
+                    if (lastRowInputs.length > 0) {
+                        const testInput = lastRowInputs[0]; // Primo input (Nome)
+                        const testValue = `Test Auto-Save ${Date.now()}`;
+                        
+                        logTest(`⌨️ Inserimento valore: "${testValue}"`, 'info');
+                        
+                        // Simula digitazione
+                        testInput.focus();
+                        testInput.value = testValue;
+                        
+                        // Trigger dell'evento input
+                        const inputEvent = new Event('input', { bubbles: true });
+                        testInput.dispatchEvent(inputEvent);
+                        
+                        logTest('🔄 Evento input triggerato, attesa auto-save...', 'info');
+                        
+                        // Aspetta l'auto-save
+                        setTimeout(async () => {
+                            // Verifica che il valore sia stato salvato
+                            const allEntities = entityManager.getAllEntities();
+                            let found = false;
+                            
+                            allEntities.forEach(entity => {
+                                const nomeAttr = entity.getAttribute('nome');
+                                if (nomeAttr && nomeAttr.value === testValue) {
+                                    found = true;
+                                    logTest(`✅ Valore salvato nell'entità ${entity.id}`, 'success');
+                                    logTest('💾 Auto-save funzionante!', 'success');
+                                }
+                            });
+                            
+                            if (!found) {
+                                logTest('❌ Valore non trovato nelle entità', 'error');
+                                logTest('💡 Controlla che l\'evento input sia collegato correttamente', 'info');
+                            }
+                        }, 1500);
+                    }
+                }, 500);
+                
+            } catch (error) {
+                logTest(`❌ Errore test input: ${error.message}`, 'error');
+            }
+        }
+        
+        async function clearAllEntities() {
+            logTest('🔍 Pulizia di tutte le entità...', 'info');
+            
+            try {
+                if (!entityManager) {
+                    throw new Error('EntityManager non inizializzato');
+                }
+                
+                const entities = entityManager.getAllEntities();
+                const count = entities.size;
+                
+                if (count === 0) {
+                    logTest('📋 Nessuna entità da eliminare', 'info');
+                    return;
+                }
+                
+                if (confirm(`Sei sicuro di voler eliminare tutte le ${count} entità?`)) {
+                    await entityManager.clearAllEntities();
+                    logTest(`✅ Eliminate ${count} entità`, 'success');
+                    logTest('💾 Storage pulito', 'info');
+                } else {
+                    logTest('❌ Operazione annullata', 'info');
+                }
+                
+            } catch (error) {
+                logTest(`❌ Errore pulizia entità: ${error.message}`, 'error');
+            }
+        }
+        
+        function listAvailableModules() {
+            logTest('🔍 Lista moduli disponibili...', 'info');
+            
+            try {
+                if (!moduleLoader) {
+                    throw new Error('ModuleLoader non inizializzato');
+                }
+                
+                const modules = moduleLoader.getAvailableModules();
+                logTest(`📋 Trovati ${modules.length} moduli:`, 'info');
+                
+                modules.forEach(module => {
+                    logTest(`  • ${module.name} (${module.id}) - ${module.category}`, 'info');
+                });
+                
+                const stats = moduleLoader.getStats();
+                logTest(`📊 Cache: ${stats.cachedModules}/${stats.registeredModules} moduli`, 'info');
+                
+            } catch (error) {
+                logTest(`❌ Errore lista moduli: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadDifferentModule() {
+            logTest('🔍 Test caricamento modulo diverso...', 'info');
+            
+            try {
+                if (!moduleLoader) {
+                    throw new Error('ModuleLoader non inizializzato');
+                }
+                
+                // Prova a caricare il modulo contact-card
+                logTest('🔄 Caricamento modulo contact-card...', 'info');
+                const contactModule = await moduleLoader.loadModule('contact-card');
+                
+                logTest('✅ Modulo contact-card caricato con successo', 'success');
+                logTest(`📋 HTML: ${contactModule.html.length} caratteri`, 'info');
+                logTest(`📋 CSS: ${contactModule.css.length} caratteri`, 'info');
+                logTest(`📋 JS: ${contactModule.js.length} caratteri`, 'info');
+                
+                // Mostra informazioni del modulo
+                const moduleInfo = moduleLoader.getModuleInfo('contact-card');
+                if (moduleInfo) {
+                    logTest(`📋 Nome: ${moduleInfo.name}`, 'info');
+                    logTest(`📋 Descrizione: ${moduleInfo.description}`, 'info');
+                    logTest(`📋 Tipo entità richiesto: ${moduleLoader.getRequiredEntityType('contact-card') || 'Nessuno'}`, 'info');
+                }
+                
+            } catch (error) {
+                logTest(`❌ Errore caricamento modulo: ${error.message}`, 'error');
+            }
+        }
+        
+        // Debug function
+        function debugModuleInstance() {
+            logTest('🔧 Debug ModuleInstance...', 'info');
+            
+            try {
+                // Verifica che ModuleInstance sia disponibile
+                if (typeof window.ModuleInstance === 'undefined') {
+                    logTest('❌ window.ModuleInstance non definito', 'error');
+                    return;
+                }
+                
+                logTest('✅ window.ModuleInstance disponibile', 'success');
+                logTest(`📋 Tipo: ${typeof window.ModuleInstance}`, 'info');
+                
+                // Verifica che StorageManager sia disponibile
+                if (!window.storageManager) {
+                    logTest('❌ window.storageManager non disponibile', 'error');
+                    return;
+                }
+                
+                logTest('✅ window.storageManager disponibile', 'success');
+                
+                // Verifica che EntityManager sia disponibile
+                if (!window.entityManager) {
+                    logTest('❌ window.entityManager non disponibile', 'error');
+                    return;
+                }
+                
+                logTest('✅ window.entityManager disponibile', 'success');
+                
+                // Test creazione istanza semplice
+                logTest('🧪 Test creazione istanza...', 'info');
+                const testInstance = new window.ModuleInstance('test-debug');
+                logTest(`✅ Istanza creata: ${testInstance.instanceId}`, 'success');
+                logTest(`📋 ModuleId: ${testInstance.moduleId}`, 'info');
+                
+                // Test salvataggio
+                testInstance.save().then(() => {
+                    logTest('✅ Istanza salvata con successo', 'success');
+                }).catch(error => {
+                    logTest(`❌ Errore salvataggio: ${error.message}`, 'error');
+                });
+                
+            } catch (error) {
+                logTest(`❌ Errore debug: ${error.message}`, 'error');
+                console.error('Debug error:', error);
+            }
+        }
+        
+        // Test funzioni per istanze
+        async function testModuleInstance() {
+            logTest('🔍 Test istanza modulo...', 'info');
+            
+            try {
+                const savedInstanceId = localStorage.getItem('demo_entity_list_instance');
+                if (!savedInstanceId) {
+                    logTest('❌ Nessuna istanza salvata trovata', 'error');
+                    return;
+                }
+                
+                logTest(`📋 ID istanza salvata: ${savedInstanceId}`, 'info');
+                
+                // Carica istanza
+                const instance = await window.ModuleInstance.load(savedInstanceId);
+                logTest(`✅ Istanza caricata: ${instance.instanceId}`, 'success');
+                logTest(`📅 Creata: ${new Date(instance.createdAt).toLocaleString()}`, 'info');
+                logTest(`📅 Aggiornata: ${new Date(instance.updatedAt).toLocaleString()}`, 'info');
+                logTest(`🔗 URL: ${instance.getUrl()}`, 'info');
+                logTest(`📊 Entità collegate: ${instance.entityIds.size}`, 'info');
+                
+                // Mostra metadati
+                const metadata = instance.getMetadata();
+                logTest(`📋 Metadati: ${JSON.stringify(metadata, null, 2)}`, 'info');
+                
+            } catch (error) {
+                logTest(`❌ Errore test istanza: ${error.message}`, 'error');
+            }
+        }
+        
+        async function listModuleInstances() {
+            logTest('🔍 Lista di tutte le istanze modulo...', 'info');
+            
+            try {
+                const instances = await window.ModuleInstance.listAll();
+                
+                if (instances.length === 0) {
+                    logTest('📋 Nessuna istanza trovata', 'info');
+                    return;
+                }
+                
+                logTest(`📋 Trovate ${instances.length} istanze:`, 'info');
+                
+                instances.forEach((instance, index) => {
+                    logTest(`  ${index + 1}. ${instance.instanceId}`, 'info');
+                    logTest(`     Modulo: ${instance.moduleId}`, 'info');
+                    logTest(`     Entità: ${instance.entityCount}`, 'info');
+                    logTest(`     Creata: ${new Date(instance.createdAt).toLocaleString()}`, 'info');
+                });
+                
+            } catch (error) {
+                logTest(`❌ Errore lista istanze: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testInstancePersistence() {
+            logTest('🔍 Test persistenza istanza dopo ricaricamento...', 'info');
+            
+            try {
+                const savedInstanceId = localStorage.getItem('demo_entity_list_instance');
+                if (!savedInstanceId) {
+                    logTest('❌ Nessuna istanza da testare', 'error');
+                    return;
+                }
+                
+                // Carica istanza
+                const instance = await window.ModuleInstance.load(savedInstanceId);
+                const entitiesBefore = instance.getLinkedEntities();
+                logTest(`📊 Entità collegate prima: ${entitiesBefore.length}`, 'info');
+                
+                // Crea una nuova entità collegata
+                const newEntity = await instance.createLinkedEntity('Cliente', {
+                    nome: `Test Persistenza ${Date.now()}`,
+                    email: 'test@persistenza.com'
+                });
+                
+                logTest(`✅ Nuova entità creata: ${newEntity.id}`, 'success');
+                
+                // Verifica che sia collegata
+                const entitiesAfter = instance.getLinkedEntities();
+                logTest(`📊 Entità collegate dopo: ${entitiesAfter.length}`, 'info');
+                
+                if (entitiesAfter.length > entitiesBefore.length) {
+                    logTest('✅ Entità collegata correttamente all\'istanza', 'success');
+                    logTest('💾 Ricarica la pagina per verificare la persistenza', 'info');
+                } else {
+                    logTest('❌ Entità non collegata correttamente', 'error');
+                }
+                
+            } catch (error) {
+                logTest(`❌ Errore test persistenza istanza: ${error.message}`, 'error');
+            }
+        }
+        
+        async function clearModuleInstances() {
+            logTest('🔍 Pulizia istanze modulo...', 'info');
+            
+            try {
+                const instances = await window.ModuleInstance.listAll();
+                
+                if (instances.length === 0) {
+                    logTest('📋 Nessuna istanza da eliminare', 'info');
+                    return;
+                }
+                
+                if (confirm(`Sei sicuro di voler eliminare tutte le ${instances.length} istanze modulo?`)) {
+                    for (const instanceInfo of instances) {
+                        try {
+                            const instance = await window.ModuleInstance.load(instanceInfo.instanceId);
+                            await instance.delete();
+                            logTest(`✅ Istanza eliminata: ${instanceInfo.instanceId}`, 'success');
+                        } catch (error) {
+                            logTest(`❌ Errore eliminazione ${instanceInfo.instanceId}: ${error.message}`, 'error');
+                        }
+                    }
+                    
+                    // Pulisci anche il localStorage della demo
+                    localStorage.removeItem('demo_entity_list_instance');
+                    logTest('✅ Pulizia completata', 'success');
+                    logTest('🔄 Ricarica la pagina per vedere l\'effetto', 'info');
+                } else {
+                    logTest('❌ Operazione annullata', 'info');
+                }
+                
+            } catch (error) {
+                logTest(`❌ Errore pulizia istanze: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 
